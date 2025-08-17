@@ -9,25 +9,41 @@ const grid = document.getElementById('grid');
 tiles.forEach(t => {
   const card = document.createElement('article');
   card.className = 'tile';
+  
   const img = document.createElement('img');
   img.src = t.src;
   img.alt = t.title;
   card.appendChild(img);
+
   const b = document.createElement('div');
   b.className = 'badge';
   b.textContent = `${t.title} — ${t.owner}`;
   card.appendChild(b);
+
   card.addEventListener('click', ()=> openMeta(t));
   grid.appendChild(card);
 });
 
+// modal logic
 const modal = document.getElementById('modal');
 const meta = document.getElementById('meta');
 const closeBtn = document.getElementById('close');
+
 function openMeta(data){
-  meta.textContent = JSON.stringify(data, null, 2);
+  meta.innerHTML = `
+    <div class="nft-card">
+      <img src="${data.src}" alt="${data.title}" class="nft-img"/>
+      <h2>${data.title}</h2>
+      <p><strong>Owner:</strong> ${data.owner}</p>
+      <h3>Attributes:</h3>
+      <ul>
+        ${Object.entries(data.attrs).map(([k,v]) => `<li><strong>${k}:</strong> ${v}</li>`).join('')}
+      </ul>
+    </div>
+  `;
   modal.classList.remove('hidden');
 }
+
 closeBtn.addEventListener('click', ()=> modal.classList.add('hidden'));
 modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.classList.add('hidden'); });
 
