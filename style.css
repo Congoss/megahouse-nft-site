@@ -1,19 +1,36 @@
-*{box-sizing:border-box}html,body{height:100%}
-body{margin:0;background:#0b0d10;color:#e8edf2;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;display:flex;flex-direction:column;min-height:100vh}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:#11161c;border-bottom:1px solid #1f2833}
-.topbar h1{font-size:18px;margin:0}
-.actions{display:flex;gap:8px;align-items:center}
-button{background:#151c24;border:1px solid #253043;color:#e8edf2;padding:8px 12px;border-radius:8px;cursor:pointer}
-button:hover{border-color:#35506d}
-.link{color:#7cf7ff;text-decoration:none;border:1px solid #253043;padding:7px 12px;border-radius:8px}
-.hint{opacity:.85;padding:12px 20px;margin:0}
-.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(400px,1fr));gap:12px;padding:20px;max-width:1400px;margin:0 auto;width:100%}
-.tile{width:400px;height:300px;border-radius:12px;border:1px solid #263244;background:#131a21;overflow:hidden;position:relative;box-shadow:0 4px 18px rgba(0,0,0,.25)}
-.tile img{width:100%;height:100%;object-fit:cover;display:block}
-.badge{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;font-size:12px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px}
-.hidden{display:none}
-.modal-inner{background:#0e141a;border:1px solid #223042;border-radius:12px;max-width:700px;width:100%;padding:16px;position:relative}
-.close{position:absolute;right:8px;top:8px;border:1px solid #34495e;border-radius:8px;background:#16202a;font-size:18px;line-height:1;padding:2px 8px}
-pre{white-space:pre-wrap;word-break:break-word;color:#bfe9ff}
-.footer{margin-top:auto;padding:12px 20px;opacity:.6;border-top:1px solid #1f2833}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Megahouse — modular apartments (400×300)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Megahouse — modular apartments (400×300)</h1>
+    <nav>
+      <button id="connect">Connect (stub)</button>
+      <button id="mint">Mint (stub)</button>
+      <a href="https://github.com/congoss/megahouse-nft-site" target="_blank">GitHub</a>
+    </nav>
+  </header>
+
+  <!-- Сцена з бекграундом -->
+  <main id="scene">
+    <section id="grid"></section>
+  </main>
+
+  <!-- Модальне вікно -->
+  <div id="modal" class="hidden">
+    <pre id="meta"></pre>
+    <button id="close">Close</button>
+  </div>
+
+  <footer>
+    <p>© Megahouse demo</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
