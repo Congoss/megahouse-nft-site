@@ -6,16 +6,16 @@ const tiles = [
 ];
 
 /************ GRID SETTINGS ************/
-const COLS = 10;
+const COLS = 10;            // 10 на поверх
 const ROWS = 12;
-const GROUND_RATIO = 0.22;
-const BURY = 0.5;
+const GROUND_RATIO = 0.22;  // частка "землі"
+const BURY = 0.5;           // перший ряд наполовину в землі
 
 const scene   = document.getElementById('scene');
 const slotsEl = document.getElementById('slots');
 const placed  = document.getElementById('placed');
 
-/* Modal refs (перевір, що ці id є в index.html) */
+/* Modal refs */
 const pickerBackdrop = document.getElementById('pickerBackdrop');
 const pickerModal    = document.getElementById('pickerModal');
 const pickerGrid     = document.getElementById('pickerGrid');
@@ -24,7 +24,7 @@ const pickerCancel   = document.getElementById('pickerCancel');
 
 const occ = new Set();
 
-/************ NEAR testnet status (опц.) ************/
+/************ (опційно) NEAR testnet status ************/
 let near, wallet, accountId = null;
 async function initNear(){ try{
   if (!window.nearApi) return;
@@ -49,8 +49,9 @@ function refreshWalletUI(){
 function connectWallet(){ wallet?.requestSignIn(); }
 function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(); }
 
-/************ GRID UTILS ************/
+/************ SIZING / LAYOUT ************/
 function slotSize(){
+  // 4:3 під твої PNG (400×300)
   let w = Math.floor(scene.clientWidth / COLS);
   let h = Math.round(w * 3/4);
   scene.style.setProperty("--slot-w", w + "px");
@@ -59,13 +60,27 @@ function slotSize(){
 }
 function cellToPx(x,y,w,h){
   const groundY = scene.clientHeight * (1 - GROUND_RATIO);
-  const adjust = 50;
+  const adjust = 50; // невелике підняття, щоб нижній ряд точно був видимий
   const top0 = groundY - h * (1 - BURY) - adjust;
   return { left:(scene.clientWidth - COLS*w)/2 + x*w, top: top0 - y*h };
 }
 function available(x,y){
   if (occ.has(`${x},${y}`)) return false;
   return y === 0 || occ.has(`${x},${y-1}`);
+}
+
+/* Перелайаут уже розміщених плиток (ВАЖЛИВО проти «роз’їзду» після resize) */
+function layoutPlaced(){
+  const {w,h} = slotSize();
+  [...placed.children].forEach(el=>{
+    const x = +el.dataset.x;
+    const y = +el.dataset.y;
+    const {left, top} = cellToPx(x,y,w,h);
+    el.style.left = left + "px";
+    el.style.top  = top  + "px";
+    el.style.width  = w + "px";
+    el.style.height = h + "px";
+  });
 }
 
 /************ RENDER SLOTS ************/
@@ -81,29 +96,34 @@ function renderSlots(){
       s.className = "slot";
       s.style.left = left + "px";
       s.style.top  = top  + "px";
-      s.addEventListener("click", ()=> openPicker(x,y));   // координати передаємо тут
+      s.addEventListener("click", ()=> openPicker(x,y));
       slotsEl.appendChild(s);
     }
   }
+  // після перемальовування слотів — оновлюємо позиції/розміри плиток
+  layoutPlaced();
 }
 
 /************ PLACE TILE ************/
 function place(x,y,tile){
   const {w,h} = slotSize();
   const {left, top} = cellToPx(x,y,w,h);
+
   const wrap = document.createElement("div");
   wrap.className = "tile-wrap";
-  wrap.style = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;opacity:0;transition:.15s opacity;`;
+  wrap.dataset.x = String(x);
+  wrap.dataset.y = String(y);
+  wrap.style = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;opacity:0;transition:.15s opacity ease-out;`;
   wrap.innerHTML = `<img class="tile-img" src="${tile.src}" alt="${tile.title}">
                     <div class="tile-badge">${tile.title}</div>`;
   placed.appendChild(wrap);
+
   occ.add(`${x},${y}`);
-  renderSlots();
+  renderSlots();                 // «+» зникне, відкриються верхні
   requestAnimationFrame(()=> wrap.style.opacity = 1);
 }
 
 /************ MODAL PICKER ************/
-// Рендеримо модалку, замкнувши x,y у замиканні:
 function renderPickerGrid(x,y){
   pickerGrid.innerHTML = "";
   tiles.forEach((t, idx)=>{
@@ -119,13 +139,13 @@ function renderPickerGrid(x,y){
     card.querySelector("button").addEventListener("click", (e)=>{
       const i = +e.currentTarget.dataset.idx;
       closePicker();
-      place(x, y, tiles[i]);     // тут уже точно є координати
+      place(x, y, tiles[i]);
     });
     pickerGrid.appendChild(card);
   });
 }
 function openPicker(x,y){
-  if(!(pickerBackdrop&&pickerModal&&pickerGrid)) return;  // якщо модалки нема в HTML
+  if(!(pickerBackdrop&&pickerModal&&pickerGrid)) return;
   renderPickerGrid(x,y);
   pickerBackdrop.hidden = false;
   pickerModal.hidden = false;
@@ -138,15 +158,3 @@ function closePicker(){
 
 /* керування модалкою */
 pickerClose?.addEventListener("click", closePicker);
-pickerCancel?.addEventListener("click", closePicker);
-pickerBackdrop?.addEventListener("click", closePicker);
-window.addEventListener("keydown", (e)=>{ if(pickerModal && !pickerModal.hidden && e.key === "Escape") closePicker(); });
-
-/************ BOOT ************/
-window.addEventListener("resize", renderSlots);
-window.addEventListener("DOMContentLoaded", async ()=>{
-  document.getElementById("connectBtn")?.addEventListener("click", connectWallet);
-  document.getElementById("disconnectBtn")?.addEventListener("click", disconnectWallet);
-  await initNear();
-  renderSlots();
-});
