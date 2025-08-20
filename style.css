@@ -63,4 +63,45 @@ body{
 .tile-badge{
   position:absolute; bottom:6px; left:8px; font-size:12px;
   background:rgba(0,0,0,.55); color:#fff; padding:2px 6px; border-radius:6px;
-  white-space:nowrap; overflow:hidd
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 16px);
+}
+
+/* футер */
+.footer{
+  padding:10px 12px; text-align:center;
+  background:rgba(0,0,0,.25); border-top:1px solid rgba(255,255,255,.08);
+}
+
+/* ===== Modal picker ===== */
+.backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.6);
+  backdrop-filter: blur(2px) saturate(1.2); z-index:1500;
+}
+.modal{
+  position:fixed; inset:0; margin:auto; top:8%;
+  width:min(980px, 92vw); max-height:84vh; overflow:auto;
+  background:#0f141b; border:1px solid #223040; border-radius:16px; padding:14px; z-index:1600;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
+.modal-head h2{margin:0; font-size:18px;}
+.icon-btn{background:transparent; border:1px solid #2a3746; border-radius:10px; padding:4px 8px; color:#fff; cursor:pointer;}
+.icon-btn:hover{background:#1b2836;}
+.grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr));
+  gap:12px; padding:6px 2px;
+}
+.nft-card{
+  border:1px solid #2a3746; border-radius:12px; overflow:hidden; background:#0b0f15;
+  display:flex; flex-direction:column;
+}
+.nft-card img{width:100%; aspect-ratio:4/3; object-fit:cover; display:block;}
+.nft-card .meta{padding:8px; display:flex; align-items:center; justify-content:space-between; gap:6px;}
+.nft-card .title{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.nft-card button{
+  padding:6px 10px; border-radius:10px; border:1px solid #2a3746; background:#1d2936; color:#fff; cursor:pointer;
+}
+.nft-card button:hover{ filter:brightness(1.05); }
+.modal-foot{display:flex; justify-content:flex-end; padding-top:8px;}
+.btn-secondary{background:#1b2836; border:1px solid #2a3746; color:#fff; border-radius:10px; padding:6px 10px; cursor:pointer;}
+.btn-secondary:hover{ filter:brightness(1.05); }
