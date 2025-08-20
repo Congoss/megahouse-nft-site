@@ -25,8 +25,8 @@ const unitBackdrop = document.getElementById("unitBackdrop");
 const unitModal    = document.getElementById("unitModal");
 const unitClose    = document.getElementById("unitClose");
 
-const occ = new Set();                 // зайняті клітинки "x,y"
-const unitMeta = new Map();            // метадані по ключу "x,y"
+const occ = new Set();       // зайняті "x,y"
+const unitMeta = new Map();  // дані юнітів по ключу "x,y"
 
 /************ (опційний) NEAR ************/
 let near, wallet;
@@ -134,6 +134,7 @@ function renderSlots(){
 function place(x,y,tile){
   let layout = getLayout();
 
+  // резерв висоти під ряд, що додається
   const prevHighest = highestFloor();
   const next = Math.max(prevHighest, y) + 1;
   const need = Math.ceil( (1 + BURY) * layout.h + next * layout.h + BOTTOM_MARGIN + TOP_SAFE );
@@ -143,7 +144,6 @@ function place(x,y,tile){
 
   const {left, top} = cellToPx(x,y,layout);
 
-  // елемент
   const wrap = document.createElement("div");
   wrap.className = "tile-wrap";
   wrap.dataset.x = String(x);
@@ -151,11 +151,9 @@ function place(x,y,tile){
   wrap.style = `left:${left}px;top:${top}px;width:${layout.w}px;height:${layout.h}px;opacity:0;transition:.15s opacity ease-out;`;
   wrap.innerHTML = `<img class="tile-img" src="${tile.src}" alt="${tile.title}">
                     <div class="tile-badge">${tile.title}</div>`;
-  // клік — показати інфо
   wrap.addEventListener("click", ()=> openUnitInfo(x,y));
   placed.appendChild(wrap);
 
-  // зберігаємо метадані інстанса
   const key = `${x},${y}`;
   const tokenId = `${tile.id}-${Date.now().toString(36).slice(-5)}`;
   unitMeta.set(key, {
@@ -164,7 +162,7 @@ function place(x,y,tile){
     owner: tile.owner,
     src: tile.src,
     x, y,
-    buyNow: null,                   // демо: можна заповнити значенням
+    buyNow: null,
     highestBid: null,
     auctionEnds: null
   });
@@ -196,9 +194,9 @@ function renderPickerGrid(x,y){
   });
 }
 function openPicker(x,y){
-  renderPickerGrid(x,y);
   pickerBackdrop.hidden = false;
   pickerModal.hidden = false;
+  renderPickerGrid(x,y);
   pickerGrid.querySelector("button")?.focus();
 }
 function closePicker(){
@@ -214,26 +212,20 @@ function openUnitInfo(x,y){
   const data = unitMeta.get(`${x},${y}`);
   if (!data) return;
 
-  // Заповнюємо картку
-  document.getElementById("unitTitle").textContent = "Apartment";
   document.getElementById("unitImg").src = data.src;
   document.getElementById("unitMetaTitle").textContent = data.title;
   document.getElementById("unitToken").textContent = data.tokenId;
   document.getElementById("unitOwner").textContent = data.owner || "—";
   document.getElementById("unitCoords").textContent = `x:${x+1}  y:${y+1}`;
-  // простий демо-бонус: нижче = більше
   const bonus = y === 0 ? "+50%" : y === 1 ? "+35%" : y === 2 ? "+25%" : y === 3 ? "+15%" : "+0%";
   document.getElementById("unitBonus").textContent = bonus;
-
   document.getElementById("unitBuy").textContent = data.buyNow ? `${data.buyNow} Ⓝ` : "—";
   document.getElementById("unitBid").textContent = data.highestBid ? `${data.highestBid} Ⓝ` : "—";
   document.getElementById("unitEnds").textContent = data.auctionEnds ? new Date(data.auctionEnds).toLocaleString() : "—";
 
-  // показ
   unitBackdrop.hidden = false;
   unitModal.hidden = false;
 
-  // демо-кнопки
   document.getElementById("btnMakeOffer").onclick = ()=> alert("Offer modal (stub)");
   document.getElementById("btnBid").onclick       = ()=> alert("Bid modal (stub)");
   document.getElementById("btnBuyNow").onclick    = ()=> alert("Buy now (stub)");
