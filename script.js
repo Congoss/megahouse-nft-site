@@ -1,18 +1,17 @@
-/************ DEMО NFT ************/
+/************ DEMO NFT ************/
 const tiles = [
   {id:"bar-001",      title:"Bar Container", owner:"demo.near", src:"img/bar.png"},
   {id:"aquarium-001", title:"Aquarium",      owner:"demo.near", src:"img/aquarium.png"},
   {id:"tv-001",       title:"TV Room",       owner:"demo.near", src:"img/tv.png"}
 ];
 
-/************ ПАРАМЕТРИ СЦЕНИ ************/
+/************ ПАРАМЕТРИ (тільки додані поля SIDE/GAP) ************/
 const COLS = 10;              // 10 на поверх
 const ROWS = 12;
-const GAP  = 10;              // відстань між контейнерами (px)
-const SIDE_MIN = 32;          // мін. бічний відступ (щоб бачити фон)
-const SIDE_MAX = 96;          // макс. бічний відступ
-const BURY = 0.5;             // перший ряд наполовину в "землі"
-const BOTTOM_MARGIN = 40;     // відступ від низу
+const BURY = 0.5;             // нижній ряд наполовину в «землі»
+const BOTTOM_MARGIN = 40;     // відступ від низу (щоб «+» завжди видно)
+const SIDE = 64;              // бічні відступи зліва/справа (px)
+const GAP  = 10;              // відстань між слотами (px)
 
 const scene   = document.getElementById('scene');
 const slotsEl = document.getElementById('slots');
@@ -27,7 +26,7 @@ const pickerCancel   = document.getElementById('pickerCancel');
 
 const occ = new Set();
 
-/************ NEAR (опц.) ************/
+/************ (опційно) NEAR status — без змін ************/
 let near, wallet, accountId = null;
 async function initNear(){ try{
   if (!window.nearApi) return;
@@ -35,4 +34,162 @@ async function initNear(){ try{
   near = await nearApi.connect({
     networkId: "testnet",
     nodeUrl: "https://rpc.testnet.near.org",
-   
+    walletUrl: "https://wallet.testnet.near.org",
+    helperUrl: "https://helper.testnet.near.org",
+  });
+  wallet = new nearApi.WalletConnection(near, null);
+  if (wallet.isSignedIn()) accountId = wallet.getAccountId();
+}catch(e){} refreshWalletUI();}
+function refreshWalletUI(){
+  const s = document.getElementById("accountStatus");
+  const c = document.getElementById("connectBtn");
+  const d = document.getElementById("disconnectBtn");
+  if(!(s&&c&&d)) return;
+  if(accountId){ s.textContent=`Signed in: ${accountId}`; c.hidden=true; d.hidden=false; }
+  else { s.textContent="Not connected"; c.hidden=false; d.hidden=true; }
+}
+function connectWallet(){ wallet?.requestSignIn(); }
+function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(); }
+
+/************ ЛЕЙАУТ — базуємось на ПРАЦЮЮЧІЙ версії з якорем до низу ************/
+function getLayout(){
+  const W = scene.clientWidth;
+  const H = scene.clientHeight;
+
+  // внутрішня ширина під колонками з урахуванням бокових полів і GAP
+  const innerW = W - 2*SIDE - (COLS - 1) * GAP;
+
+  // ширина/висота слота (4:3), прив’язка висоти ряду до низу
+  let w = Math.floor(innerW / COLS);
+  let h = Math.round(w * 3/4);
+
+  // якщо нижній ряд виліз би за верх HUD — піджимаємо масштаб (зберігаємо поведінку «+»)
+  const minTopForRow0 = 60; // запас під HUD
+  const top0 = H - (1 + BURY) * h - BOTTOM_MARGIN;
+  if (top0 < minTopForRow0) {
+    const scale = (H - BOTTOM_MARGIN - minTopForRow0) / ((1 + BURY) * h);
+    h = Math.max(40, Math.floor(h * scale));
+    w = Math.round(h * 4/3);
+  }
+
+  // реальна внутрішня ширина після округлення — центруємо композицію
+  const realInnerW = COLS * w + (COLS - 1) * GAP;
+  const leftBase = (W - realInnerW) / 2;
+
+  scene.style.setProperty("--slot-w", w + "px");
+  scene.style.setProperty("--slot-h", h + "px");
+
+  return {W,H,w,h,leftBase};
+}
+
+// координати клітинки (нижній ряд — від низу екрана, як у твоїй робочій версії)
+function cellToPx(x,y,layout){
+  const {H,w,h,leftBase} = layout;
+  const top0 = H - (1 + BURY) * h - BOTTOM_MARGIN; // ЯКОРЬ ДО НИЗУ
+  const left = leftBase + x * (w + GAP);
+  const top  = top0 - y * h;
+  return { left, top };
+}
+
+function available(x,y){
+  if (occ.has(`${x},${y}`)) return false;
+  return y === 0 || occ.has(`${x},${y-1}`);
+}
+
+/************ Переукладка розміщених ************/
+function layoutPlaced(layout){
+  [...placed.children].forEach(el=>{
+    const x = +el.dataset.x;
+    const y = +el.dataset.y;
+    const {left, top} = cellToPx(x,y,layout);
+    el.style.left   = left + "px";
+    el.style.top    = top  + "px";
+    el.style.width  = layout.w + "px";
+    el.style.height = layout.h + "px";
+  });
+}
+
+/************ Слоти ************/
+function renderSlots(){
+  const layout = getLayout();
+  slotsEl.innerHTML = "";
+  for (let y=0; y<ROWS; y++){
+    for (let x=0; x<COLS; x++){
+      if (!available(x,y)) continue;
+      const {left, top} = cellToPx(x,y,layout);
+      const s = document.createElement("div");
+      s.className = "slot";
+      s.style.left = left + "px";
+      s.style.top  = top  + "px";
+      s.addEventListener("click", ()=> openPicker(x,y));
+      slotsEl.appendChild(s);
+    }
+  }
+  layoutPlaced(layout);
+}
+
+/************ Розміщення NFT ************/
+function place(x,y,tile){
+  const layout = getLayout();
+  const {left, top} = cellToPx(x,y,layout);
+
+  const wrap = document.createElement("div");
+  wrap.className = "tile-wrap";
+  wrap.dataset.x = String(x);
+  wrap.dataset.y = String(y);
+  wrap.style = `left:${left}px;top:${top}px;width:${layout.w}px;height:${layout.h}px;opacity:0;transition:.15s opacity ease-out;`;
+  wrap.innerHTML = `<img class="tile-img" src="${tile.src}" alt="${tile.title}">
+                    <div class="tile-badge">${tile.title}</div>`;
+  placed.appendChild(wrap);
+
+  occ.add(`${x},${y}`);
+  renderSlots();
+  requestAnimationFrame(()=> wrap.style.opacity = 1);
+}
+
+/************ Модалка ************/
+function renderPickerGrid(x,y){
+  pickerGrid.innerHTML = "";
+  tiles.forEach((t, idx)=>{
+    const card = document.createElement("div");
+    card.className = "nft-card";
+    card.innerHTML = `
+      <img src="${t.src}" alt="${t.title}">
+      <div class="meta">
+        <div class="title" title="${t.title}">${t.title}</div>
+        <button data-idx="${idx}" type="button">Place</button>
+      </div>
+    `;
+    card.querySelector("button").addEventListener("click", (e)=>{
+      const i = +e.currentTarget.dataset.idx;
+      closePicker();
+      place(x, y, tiles[i]);
+    });
+    pickerGrid.appendChild(card);
+  });
+}
+function openPicker(x,y){
+  if(!(pickerBackdrop&&pickerModal&&pickerGrid)) return;
+  renderPickerGrid(x,y);
+  pickerBackdrop.hidden = false;
+  pickerModal.hidden = false;
+  pickerGrid.querySelector("button")?.focus();
+}
+function closePicker(){
+  if(pickerBackdrop) pickerBackdrop.hidden = true;
+  if(pickerModal)    pickerModal.hidden = true;
+}
+
+/************ Події ************/
+pickerClose?.addEventListener("click", closePicker);
+pickerCancel?.addEventListener("click", closePicker);
+pickerBackdrop?.addEventListener("click", closePicker);
+window.addEventListener("keydown", (e)=>{ if(pickerModal && !pickerModal.hidden && e.key === "Escape") closePicker(); });
+
+window.addEventListener("resize", renderSlots);
+window.addEventListener("DOMContentLoaded", async ()=>{
+  document.getElementById("connectBtn")?.addEventListener("click", connectWallet);
+  document.getElementById("disconnectBtn")?.addEventListener("click", disconnectWallet);
+  await initNear();
+  renderSlots();
+});
