@@ -3,28 +3,53 @@
   --slot-h:300px;
 }
 
+/* базове */
 *{ box-sizing:border-box; }
 html,body{ height:100%; margin:0; }
 body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
-  background:#0b0d10; color:#eee;
-  display:grid; grid-template-rows:auto 1fr auto;
+  background:#0b0d10;
+  color:#eee;
+  display:grid;
+  grid-template-rows: 1fr auto; /* сцена | футер */
 }
 
-.topbar{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#11161c;}
-.actions > *{ margin-left:6px; }
-button{ padding:6px 12px; background:#1d2936; color:#fff; border:1px solid #2a3746; border-radius:8px; cursor:pointer; }
-button:hover{ filter:brightness(1.1); }
-
+/* сцена з фоном */
 #scene{
   position:relative;
   background:url("./img/background1.png") no-repeat center bottom;
-  background-size:cover; overflow:hidden;
+  background-size:cover;
+  overflow:hidden;
 }
 
-/* ключове: порядок шарів */
+/* шари */
 #slots{ position:absolute; inset:0; z-index:2; }
 #placed{ position:absolute; inset:0; z-index:1; }
+
+/* плаваюча панель (без чорної смуги, поверх бекграунду) */
+.hud{
+  position:fixed;
+  top:12px; left:12px; right:12px;
+  z-index:10;
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px;
+  background:rgba(10,14,18,.35);           /* напівпрозорий */
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  backdrop-filter: blur(6px) saturate(1.1);
+}
+.brand{ font-weight:600; letter-spacing:.2px; }
+.spacer{ flex:1; }
+.hud button{
+  padding:6px 12px;
+  background:#1d2936;
+  color:#fff; border:1px solid #2a3746;
+  border-radius:10px; cursor:pointer;
+}
+.hud button:hover{ filter:brightness(1.1); }
+.hud button.ghost{
+  background:transparent; color:#ddd; border-color:#2a3746;
+}
 
 /* слоти */
 .slot{
@@ -49,26 +74,10 @@ button:hover{ filter:brightness(1.1); }
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 16px);
 }
 
-.footer{padding:8px 12px; background:#11161c; text-align:center;}
-
-/* ===== (опціонально) стилі модалки, якщо ти додав її в index.html ===== */
-.backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:saturate(1.2) blur(2px); z-index:50; }
-.modal{
-  position:fixed; inset:auto 0 0 0; margin:auto; top:8%;
-  width:min(980px, 92vw); max-height:84vh; overflow:auto;
-  background:#0f141b; border:1px solid #223040; border-radius:16px; padding:14px; z-index:60;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
+/* прозорий футер */
+.footer{
+  padding:10px 12px;
+  text-align:center;
+  background:rgba(0,0,0,.25);
+  border-top:1px solid rgba(255,255,255,.08);
 }
-.modal-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
-.modal-head h2{margin:0; font-size:18px;}
-.icon-btn{background:transparent; border:1px solid #2a3746; border-radius:10px; padding:4px 8px;}
-.icon-btn:hover{background:#1b2836;}
-.grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:12px; padding:6px 2px; }
-.nft-card{ border:1px solid #2a3746; border-radius:12px; overflow:hidden; background:#0b0f15; display:flex; flex-direction:column; }
-.nft-card img{width:100%; aspect-ratio:4/3; object-fit:cover; display:block;}
-.nft-card .meta{padding:8px; display:flex; align-items:center; justify-content:space-between; gap:6px;}
-.nft-card .title{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.nft-card button{border-radius:10px;}
-.modal-foot{display:flex; justify-content:flex-end; padding-top:8px;}
-.btn-secondary{background:#1b2836; border:1px solid #2a3746;}
-.btn-secondary:hover{filter:brightness(1.1);}
