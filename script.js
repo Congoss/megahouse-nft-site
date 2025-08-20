@@ -13,7 +13,7 @@ const BOTTOM_MARGIN = 40;
 const SIDE = 64;         // бічні поля
 const GAP  = 0;          // щільна кладка
 const SLOT_INSET = 2;    // слот «+» трохи менший
-const TOP_SAFE = 72;     // хочемо мати мінімум стільки px зверху над найвищим слотом
+const TOP_SAFE = 72;     // мін. відступ над верхнім рядом, щоб не ліз під HUD
 
 /************ DOM ************/
 const scene   = document.getElementById("scene");
@@ -57,8 +57,9 @@ function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(
 
 /************ ЛЕЙАУТ ************/
 function getLayout(){
-  // базово: сцена не менше за viewport (потім можемо її збільшити)
-  scene.style.height = Math.max(window.innerHeight, parseInt(scene.style.height||0)) + "px";
+  // гарантуємо, що сцена має принаймні висоту екрана
+  const currentMin = parseInt(scene.style.minHeight || 0) || 0;
+  scene.style.minHeight = Math.max(window.innerHeight, currentMin) + "px";
 
   const W = scene.clientWidth;
   const H = scene.clientHeight;
@@ -93,11 +94,12 @@ function cellToPx(x,y,layout){
   return { left, top };
 }
 
-/* якщо верхні слоти підлізли під HUD — збільшуємо висоту сцени і перемальовуємо */
+/* якщо верхні слоти під HUD — збільшуємо min-height сцени і перевідмальовуємо */
 function ensureSceneTallEnough(layout, minTopSeen){
   if (minTopSeen >= TOP_SAFE) return false;
-  const needExtra = TOP_SAFE - minTopSeen;        // скільки не вистачає
-  scene.style.height = (layout.H + needExtra) + "px";
+  const needExtra = TOP_SAFE - minTopSeen;              // скільки не вистачає
+  const cur = parseInt(scene.style.minHeight || 0) || layout.H;
+  scene.style.minHeight = (cur + needExtra) + "px";     // саме min-height!
   return true;
 }
 
@@ -144,10 +146,10 @@ function renderSlots(){
     }
   }
 
-  // якщо верхні слоти під HUD — збільшуємо сцену і повторюємо рендер
+  // якщо верхній ряд поліз під HUD — додаємо висоти й малюємо ще раз
   if (ensureSceneTallEnough(layout, minTop)) {
     layout = getLayout();
-    return renderSlots(); // один повтор достатньо
+    return renderSlots(); // одного повтору достатньо
   }
 
   layoutPlaced(layout);
@@ -211,7 +213,7 @@ pickerCancel?.addEventListener("click", closePicker);
 pickerBackdrop?.addEventListener("click", closePicker);
 window.addEventListener("keydown", (e)=>{ if(pickerModal && !pickerModal.hidden && e.key === "Escape") closePicker(); });
 
-window.addEventListener("resize", ()=>{ scene.style.height=""; renderSlots(); });
+window.addEventListener("resize", ()=>{ scene.style.minHeight = ""; renderSlots(); });
 window.addEventListener("DOMContentLoaded", async ()=>{
   document.getElementById("connectBtn")?.addEventListener("click", connectWallet);
   document.getElementById("disconnectBtn")?.addEventListener("click", disconnectWallet);
