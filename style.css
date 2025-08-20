@@ -1,108 +1,113 @@
-:root{
-  --slot-w:400px;
-  --slot-h:300px;
+:root {
+  --slot-w: 400px;
+  --slot-h: 300px;
 }
 
-/* базове */
-*{ box-sizing:border-box; }
-html,body{ margin:0; padding:0; min-height:100%; }
-body{
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
-  background:#0b0d10; color:#eee;
-  overflow-x:hidden;           /* вертикальний скрол дозволено */
+/* Базові стилі */
+body, html {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #0b0d10;
+  color: #eee;
+  overflow-x: hidden;
+  font-family: sans-serif;
 }
 
-/* HUD поверх усього */
-.hud{
-  position:fixed; top:12px; left:12px; right:12px; z-index:1000;
-  display:flex; align-items:center; gap:12px;
-  padding:10px 12px; background:rgba(10,14,18,.35);
-  border:1px solid rgba(255,255,255,.12); border-radius:14px;
-  backdrop-filter: blur(6px) saturate(1.1);
-}
-.brand{ font-weight:600; letter-spacing:.2px; }
-.spacer{ flex:1; }
-.hud button{
-  padding:6px 12px; background:#1d2936; color:#fff;
-  border:1px solid #2a3746; border-radius:10px; cursor:pointer;
-}
-.hud button:hover{ filter:brightness(1.1); }
-.hud button.ghost{ background:transparent; color:#ddd; border-color:#2a3746; }
-
-/* сцена — росте вгору через min-height, якою керує JS */
-#scene{
-  position:relative;
-  min-height:100vh;                    /* старт */
-  background:url("./img/background1.png") no-repeat center bottom;
-  background-size:cover;
-  overflow:hidden;
+/* ===== TOPBAR ===== */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  z-index: 1000;
+  background: transparent;       /* прозорий фон */
+  pointer-events: none;          /* кліки проходять крізь */
 }
 
-/* шари */
-#slots{ position:absolute; inset:0; z-index:999; } /* слоти поверх */
-#placed{ position:absolute; inset:0; z-index:1; }
-
-/* слот з "+" — трохи менший за NFT, без округлення */
-.slot{
-  position:absolute;
-  border:2px dashed rgba(255,255,255,.45);
-  display:flex; align-items:center; justify-content:center;
-  color:#fff; font-size:24px; cursor:pointer;
-  box-sizing:border-box;
+.topbar .logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  pointer-events: auto;          /* можна клікати */
 }
 
-/* плитка (NFT) — щільна кладка */
-.tile-wrap{
-  position:absolute;
-  width:var(--slot-w);
-  height:var(--slot-h);
-  box-shadow:0 4px 10px rgba(0,0,0,.5);
-  border-radius:0;
-  overflow:hidden;
-}
-.tile-img{ width:100%; height:100%; object-fit:cover; display:block; }
-.tile-badge{
-  position:absolute; bottom:6px; left:8px; font-size:12px;
-  background:rgba(0,0,0,.55); color:#fff; padding:2px 6px; border-radius:6px;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 16px);
+.connect-btn {
+  background: linear-gradient(135deg, #ff9d00, #ff6600);
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  pointer-events: auto;
 }
 
-/* футер */
-.footer{
-  padding:10px 12px; text-align:center;
-  background:rgba(0,0,0,.25); border-top:1px solid rgba(255,255,255,.08);
+.connect-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
 }
 
-/* Modal */
-.backdrop{
-  position:fixed; inset:0; background:rgba(0,0,0,.6);
-  backdrop-filter: blur(2px) saturate(1.2); z-index:1500;
+/* ===== SCENE ===== */
+#scene {
+  position: relative;
+  width: 100%;
+  margin-top: 60px; /* щоб не лізло під топбар */
+  background: url("img/background1.png") no-repeat center bottom;
+  background-size: cover;
+  overflow: visible;
 }
-.modal{
-  position:fixed; inset:0; margin:auto; top:8%;
-  width:min(980px, 92vw); max-height:84vh; overflow:auto;
-  background:#0f141b; border:1px solid #223040; border-radius:16px; padding:14px; z-index:1600;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
+
+#grid {
+  position: relative;
+  margin: 0 auto;
 }
-.modal-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
-.modal-head h2{margin:0; font-size:18px;}
-.icon-btn{background:transparent; border:1px solid #2a3746; border-radius:10px; padding:4px 8px; color:#fff; cursor:pointer;}
-.icon-btn:hover{background:#1b2836;}
-.grid{
-  display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr));
-  gap:12px; padding:6px 2px;
+
+/* ===== NFT блоки ===== */
+.tile-wrap {
+  position: absolute;
 }
-.nft-card{
-  border:1px solid #2a3746; border-radius:12px; overflow:hidden; background:#0b0f15;
-  display:flex; flex-direction:column;
+
+.tile-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  box-shadow: 0 4px 10px rgba(0,0,0,.4);
 }
-.nft-card img{width:100%; aspect-ratio:4/3; object-fit:cover; display:block;}
-.nft-card .meta{padding:8px; display:flex; align-items:center; justify-content:space-between; gap:6px;}
-.nft-card .title{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.nft-card button{
-  padding:6px 10px; border-radius:10px; border:1px solid #2a3746; background:#1d2936; color:#fff; cursor:pointer;
+
+.tile-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 6px;
+  font-size: 12px;
+  background: rgba(0,0,0,.5);
+  color: #fff;
+  padding: 2px 4px;
 }
-.nft-card button:hover{ filter:brightness(1.05); }
-.modal-foot{display:flex; justify-content:flex-end; padding-top:8px;}
-.btn-secondary{background:#1b2836; border:1px solid #2a3746; color:#fff; border-radius:10px; padding:6px 10px; cursor:pointer;}
-.btn-secondary:hover{ filter:brightness(1.05); }
+
+/* ===== Слоти для NFT ===== */
+.slot {
+  position: absolute;
+  width: var(--slot-w);
+  height: var(--slot-h);
+  border: 2px dashed rgba(255,255,255,.35);
+  background: rgba(255,255,255,.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.slot::after {
+  content: "+";
+  font-size: 28px;
+  color: #fff;
+}
