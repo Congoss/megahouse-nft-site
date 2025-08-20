@@ -10,9 +10,10 @@ const COLS = 10;
 const ROWS = 12;
 const BURY = 0.5;
 const BOTTOM_MARGIN = 40;
-const SIDE = 64;   // бічні поля
-const GAP  = 0;    // відстань між блоками = 0 (щільна кладка)
-const SLOT_INSET = 2; // слот "+" трохи менший за NFT на 2px з кожного боку
+const SIDE = 64;         // бічні поля
+const GAP  = 0;          // щільна кладка
+const SLOT_INSET = 2;    // слот «+» трохи менший
+const TOP_SAFE = 72;     // хочемо мати мінімум стільки px зверху над найвищим слотом
 
 /************ DOM ************/
 const scene   = document.getElementById("scene");
@@ -56,16 +57,18 @@ function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(
 
 /************ ЛЕЙАУТ ************/
 function getLayout(){
+  // базово: сцена не менше за viewport (потім можемо її збільшити)
+  scene.style.height = Math.max(window.innerHeight, parseInt(scene.style.height||0)) + "px";
+
   const W = scene.clientWidth;
   const H = scene.clientHeight;
 
-  const innerW = W - 2*SIDE - (COLS - 1)*GAP; // з GAP=0 це просто W - 2*SIDE
-
+  const innerW = W - 2*SIDE - (COLS - 1)*GAP; // з GAP=0: W - 2*SIDE
   let w = Math.floor(innerW / COLS);
   let h = Math.round(w * 3/4);
 
-  // гарантія, що перший ряд у кадрі
-  const minTopForRow0 = 60;
+  // забезпечуємо видимість нижнього ряду
+  const minTopForRow0 = 60; // запас під HUD
   const top0 = H - (1 + BURY) * h - BOTTOM_MARGIN;
   if (top0 < minTopForRow0) {
     const scale = (H - BOTTOM_MARGIN - minTopForRow0) / ((1 + BURY) * h);
@@ -90,12 +93,20 @@ function cellToPx(x,y,layout){
   return { left, top };
 }
 
+/* якщо верхні слоти підлізли під HUD — збільшуємо висоту сцени і перемальовуємо */
+function ensureSceneTallEnough(layout, minTopSeen){
+  if (minTopSeen >= TOP_SAFE) return false;
+  const needExtra = TOP_SAFE - minTopSeen;        // скільки не вистачає
+  scene.style.height = (layout.H + needExtra) + "px";
+  return true;
+}
+
 function available(x,y){
   if (occ.has(`${x},${y}`)) return false;
   return y === 0 || occ.has(`${x},${y-1}`);
 }
 
-/************ РОЗКЛАДКА ВЖЕ ВСТАНОВЛЕНИХ ************/
+/************ РОЗКЛАДКА ВСТАНОВЛЕНИХ ************/
 function layoutPlaced(layout){
   [...placed.children].forEach(el=>{
     const x = +el.dataset.x;
@@ -110,28 +121,35 @@ function layoutPlaced(layout){
 
 /************ СЛОТИ ************/
 function renderSlots(){
-  const layout = getLayout();
+  // перший прохід
+  let layout = getLayout();
   slotsEl.innerHTML = "";
 
+  let minTop = Infinity;
   for (let y=0; y<ROWS; y++){
     for (let x=0; x<COLS; x++){
       if (!available(x,y)) continue;
-      // координати центруємо по клітинці
       const {left, top} = cellToPx(x,y,layout);
+      if (top < minTop) minTop = top;
+
       const s = document.createElement("div");
       s.className = "slot";
-
-      // робимо рамку "+" трохи меншою за NFT
       s.style.width  = (layout.w - 2*SLOT_INSET) + "px";
       s.style.height = (layout.h - 2*SLOT_INSET) + "px";
       s.style.left   = (left + SLOT_INSET) + "px";
       s.style.top    = (top + SLOT_INSET) + "px";
-
-      s.textContent = "+";
+      s.textContent  = "+";
       s.addEventListener("click", ()=> openPicker(x,y));
       slotsEl.appendChild(s);
     }
   }
+
+  // якщо верхні слоти під HUD — збільшуємо сцену і повторюємо рендер
+  if (ensureSceneTallEnough(layout, minTop)) {
+    layout = getLayout();
+    return renderSlots(); // один повтор достатньо
+  }
+
   layoutPlaced(layout);
 }
 
@@ -193,7 +211,7 @@ pickerCancel?.addEventListener("click", closePicker);
 pickerBackdrop?.addEventListener("click", closePicker);
 window.addEventListener("keydown", (e)=>{ if(pickerModal && !pickerModal.hidden && e.key === "Escape") closePicker(); });
 
-window.addEventListener("resize", renderSlots);
+window.addEventListener("resize", ()=>{ scene.style.height=""; renderSlots(); });
 window.addEventListener("DOMContentLoaded", async ()=>{
   document.getElementById("connectBtn")?.addEventListener("click", connectWallet);
   document.getElementById("disconnectBtn")?.addEventListener("click", disconnectWallet);
