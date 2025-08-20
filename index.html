@@ -7,66 +7,38 @@
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="logo">Megahouse</div>
-    <button id="connectBtn" class="connect-btn" type="button">Connect Wallet</button>
+  <!-- Верхня панель -->
+  <div class="top-ui">
+    <div class="logo">MEGAHOUSE</div>
+    <button id="connect">Connect Wallet</button>
   </div>
 
-  <!-- Scene -->
+  <!-- Сцена -->
   <main id="scene">
     <div id="slots"></div>
     <div id="placed"></div>
   </main>
 
-  <footer class="footer">© Megahouse demo</footer>
-
-  <!-- NFT Picker Modal -->
-  <div id="pickerBackdrop" class="backdrop" hidden></div>
-  <div id="pickerModal" class="modal modal--picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle" hidden>
-    <div class="modal-head">
-      <h2 id="pickerTitle">Choose a module</h2>
-      <button class="icon-btn" id="pickerClose" aria-label="Close">✕</button>
-    </div>
-    <div id="pickerGrid" class="grid"></div>
-    <div class="modal-foot">
-      <button id="pickerCancel" class="btn-secondary" type="button">Cancel</button>
-    </div>
+  <!-- Фарм шкала -->
+  <div class="farm-bar">
+    <div class="farm-label">Farm progress:</div>
+    <div class="farm-progress"><div id="farm-fill"></div></div>
+    <div class="farm-value" id="farm-value">0 N</div>
   </div>
 
-  <!-- Unit Info Modal -->
-  <div id="unitBackdrop" class="backdrop" hidden></div>
-  <div id="unitModal" class="modal modal--unit" role="dialog" aria-modal="true" aria-labelledby="unitTitle" hidden>
-    <div class="modal-head">
-      <h2 id="unitTitle">Apartment</h2>
-      <button class="icon-btn" id="unitClose" aria-label="Close">✕</button>
-    </div>
-
-    <div class="unit-body">
-      <img id="unitImg" alt="preview" class="unit-img"/>
-      <div class="unit-meta">
-        <div class="unit-row"><span>Title:</span><strong id="unitMetaTitle">—</strong></div>
-        <div class="unit-row"><span>Token ID:</span><strong id="unitToken">—</strong></div>
-        <div class="unit-row"><span>Owner:</span><strong id="unitOwner">—</strong></div>
-        <div class="unit-row"><span>Coords:</span><strong id="unitCoords">—</strong></div>
-        <div class="unit-row"><span>Floor bonus:</span><strong id="unitBonus">—</strong></div>
-        <hr class="unit-sep"/>
-        <div class="unit-row"><span>Buy now:</span><strong id="unitBuy">—</strong></div>
-        <div class="unit-row"><span>Highest bid:</span><strong id="unitBid">—</strong></div>
-        <div class="unit-row"><span>Auction ends:</span><strong id="unitEnds">—</strong></div>
+  <!-- Popup інфо -->
+  <div id="infoBox" class="info-box hidden">
+    <div class="info-content">
+      <span id="infoClose" class="close-btn">✖</span>
+      <h2 id="infoTitle"></h2>
+      <p id="infoOwner"></p>
+      <div class="info-actions">
+        <button id="unstakeBtn">Unstake</button>
+        <button id="farmBtn">Farm Info</button>
       </div>
     </div>
-
-    <div class="modal-foot unit-actions">
-      <button id="btnUnstake" class="btn-warning" type="button">Unstake</button>
-      <div class="spacer"></div>
-      <button id="btnMakeOffer" class="btn-primary" type="button">Make offer</button>
-      <button id="btnBid" class="btn-primary" type="button">Place bid</button>
-      <button id="btnBuyNow" class="btn-accent" type="button">Buy now</button>
-    </div>
   </div>
 
-  <script src="https://unpkg.com/near-api-js/dist/near-api-js.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
