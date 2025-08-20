@@ -22,18 +22,18 @@ body{
   overflow:hidden;
 }
 
-/* шари */
-#slots{ position:absolute; inset:0; z-index:2; }
+/* шари сцени */
+#slots{ position:absolute; inset:0; z-index:2; }   /* вище, приймає кліки */
 #placed{ position:absolute; inset:0; z-index:1; }
 
-/* плаваюча панель (без чорної смуги, поверх бекграунду) */
+/* плаваюча панель поверх бекграунду */
 .hud{
   position:fixed;
   top:12px; left:12px; right:12px;
-  z-index:10;
+  z-index:1000;                       /* поверх усього */
   display:flex; align-items:center; gap:12px;
   padding:10px 12px;
-  background:rgba(10,14,18,.35);           /* напівпрозорий */
+  background:rgba(10,14,18,.35);
   border:1px solid rgba(255,255,255,.12);
   border-radius:14px;
   backdrop-filter: blur(6px) saturate(1.1);
@@ -54,7 +54,7 @@ body{
 /* слоти */
 .slot{
   position:absolute; width:var(--slot-w); height:var(--slot-h);
-  outline:2px dashed rgba(255,255,255,.35);
+  outline:2px dashed rgba(255,255,255,.35);  /* outline не ламає геометрію */
   outline-offset:-2px;
   background:rgba(255,255,255,.08);
   display:flex; align-items:center; justify-content:center;
@@ -74,7 +74,7 @@ body{
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 16px);
 }
 
-/* прозорий футер */
+/* футер прозорий */
 .footer{
   padding:10px 12px;
   text-align:center;
