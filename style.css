@@ -20,7 +20,7 @@ body{
 }
 
 /* шари */
-#slots{ position:absolute; inset:0; z-index:2; }
+#slots{ position:absolute; inset:0; z-index:999; }   /* вище за все на сцені */
 #placed{ position:absolute; inset:0; z-index:1; }
 
 /* HUD */
