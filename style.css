@@ -5,31 +5,17 @@
 
 /* базове */
 *{ box-sizing:border-box; }
-html,body{ margin:0; min-height:100%; }
+html,body{ margin:0; padding:0; min-height:100%; }
 body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
   background:#0b0d10; color:#eee;
-  display:grid; grid-template-rows:auto 1fr auto; /* HUD | scene | footer */
-  overflow-x:hidden; /* вертикальний скрол дозволено */
+  overflow-x:hidden;           /* вертикальний скрол дозволено */
 }
 
-/* сцена — висота тепер керується JS */
-#scene{
-  position:relative;
-  background:url("./img/background1.png") no-repeat center bottom;
-  background-size:cover;
-  overflow:hidden;
-  min-height:100vh;   /* стартово на весь екран, далі JS збільшує height */
-}
-
-/* шари */
-#slots{ position:absolute; inset:0; z-index:999; } /* слоти поверх */
-#placed{ position:absolute; inset:0; z-index:1; }
-
-/* HUD */
+/* HUD поверх усього */
 .hud{
-  position:sticky; top:12px; left:12px; right:12px; z-index:1000;
-  margin:12px; display:flex; align-items:center; gap:12px;
+  position:fixed; top:12px; left:12px; right:12px; z-index:1000;
+  display:flex; align-items:center; gap:12px;
   padding:10px 12px; background:rgba(10,14,18,.35);
   border:1px solid rgba(255,255,255,.12); border-radius:14px;
   backdrop-filter: blur(6px) saturate(1.1);
@@ -42,6 +28,19 @@ body{
 }
 .hud button:hover{ filter:brightness(1.1); }
 .hud button.ghost{ background:transparent; color:#ddd; border-color:#2a3746; }
+
+/* сцена — росте вгору через min-height, якою керує JS */
+#scene{
+  position:relative;
+  min-height:100vh;                    /* старт */
+  background:url("./img/background1.png") no-repeat center bottom;
+  background-size:cover;
+  overflow:hidden;
+}
+
+/* шари */
+#slots{ position:absolute; inset:0; z-index:999; } /* слоти поверх */
+#placed{ position:absolute; inset:0; z-index:1; }
 
 /* слот з "+" — трохи менший за NFT, без округлення */
 .slot{
