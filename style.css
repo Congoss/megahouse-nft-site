@@ -1,113 +1,134 @@
-:root {
-  --slot-w: 400px;
+:root{
+  --slot-w: 400px;   /* логічний розмір слота — під 400×300 */
   --slot-h: 300px;
 }
 
-/* Базові стилі */
-body, html {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-  background: #0b0d10;
-  color: #eee;
-  overflow-x: hidden;
-  font-family: sans-serif;
+/* ===== БАЗА ===== */
+*{ box-sizing: border-box; }
+html,body{
+  margin: 0; padding: 0; min-height: 100%;
+  background: #0b0d10; color: #eee;
+  overflow-x: hidden; /* вертикальний скрол дозволений у body */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* ===== TOPBAR ===== */
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  box-sizing: border-box;
-  z-index: 1000;
-  background: transparent;       /* прозорий фон */
-  pointer-events: none;          /* кліки проходять крізь */
+/* ===== TOPBAR (прозорий) ===== */
+.topbar{
+  position: fixed; inset: 0 0 auto 0; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; z-index: 1000; background: transparent;
+  pointer-events: none; /* пропускаємо кліки, крім активних елементів */
 }
-
-.topbar .logo {
-  font-size: 22px;
-  font-weight: bold;
-  color: white;
-  pointer-events: auto;          /* можна клікати */
-}
-
-.connect-btn {
-  background: linear-gradient(135deg, #ff9d00, #ff6600);
-  border: none;
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
-  padding: 10px 20px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+.topbar .logo{
+  font-size: 22px; font-weight: 700; letter-spacing: .2px; color:#fff;
   pointer-events: auto;
 }
-
-.connect-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
+.connect-btn{
+  background: linear-gradient(135deg, #ff9d00, #ff6600);
+  border: none; color:#fff; font-weight: 700; font-size: 16px;
+  padding: 10px 20px; border-radius: 12px; cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+  pointer-events: auto;
 }
+.connect-btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,.4); }
 
-/* ===== SCENE ===== */
-#scene {
+/* ===== SCENE (фон + відступ під топбар) ===== */
+#scene{
   position: relative;
-  width: 100%;
-  margin-top: 60px; /* щоб не лізло під топбар */
+  margin-top: 60px;               /* щоб не залазило під топбар */
+  min-height: 100vh;              /* стартово на весь екран, далі JS може збільшити */
   background: url("img/background1.png") no-repeat center bottom;
   background-size: cover;
-  overflow: visible;
+  overflow: hidden;               /* шари всередині абсолютні */
 }
 
-#grid {
-  position: relative;
-  margin: 0 auto;
-}
+/* Шари сцени */
+#slots{  position: absolute; inset: 0; z-index: 2; } /* клікабельні слоти поверх */
+#placed{ position: absolute; inset: 0; z-index: 1; } /* розміщені плитки під слотами */
 
-/* ===== NFT блоки ===== */
-.tile-wrap {
+/* ===== СЛОТИ (+) ===== */
+.slot{
   position: absolute;
+  /* розмір і позицію задає JS, тут лише візуал */
+  border: 2px dashed rgba(255,255,255,.45);
+  display: flex; align-items: center; justify-content: center;
+  color:#fff; font-size: 24px; cursor: pointer;
+  background: rgba(255,255,255,.05);
+  box-sizing: border-box;
+  border-radius: 0;               /* без округлень, щоб не «ламало» геометрію */
 }
+.slot::after{ content: "+"; }
 
-.tile-img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  box-shadow: 0 4px 10px rgba(0,0,0,.4);
-}
-
-.tile-badge {
-  position: absolute;
-  bottom: 4px;
-  left: 6px;
-  font-size: 12px;
-  background: rgba(0,0,0,.5);
-  color: #fff;
-  padding: 2px 4px;
-}
-
-/* ===== Слоти для NFT ===== */
-.slot {
+/* ===== NFT ПЛИТКИ ===== */
+.tile-wrap{
   position: absolute;
   width: var(--slot-w);
   height: var(--slot-h);
-  border: 2px dashed rgba(255,255,255,.35);
-  background: rgba(255,255,255,.05);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  overflow: hidden;
+  border-radius: 0;               /* квадратні, щільна кладка */
+  box-shadow: 0 4px 10px rgba(0,0,0,.5);
+}
+.tile-img{
+  width: 100%; height: 100%; display: block;
+  object-fit: cover;              /* заповнює слот */
+}
+.tile-badge{
+  position: absolute; left: 8px; bottom: 6px;
+  font-size: 12px; background: rgba(0,0,0,.55); color:#fff;
+  padding: 2px 6px; border-radius: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: calc(100% - 16px);
 }
 
-.slot::after {
-  content: "+";
-  font-size: 28px;
-  color: #fff;
+/* ===== FOOTER ===== */
+.footer{
+  padding: 10px 12px; text-align: center;
+  background: rgba(0,0,0,.25);
+  border-top: 1px solid rgba(255,255,255,.08);
 }
+
+/* ===== MODAL PICKER ===== */
+.backdrop{
+  position: fixed; inset: 0; z-index: 1500;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(2px) saturate(1.2);
+}
+.modal{
+  position: fixed; inset: 0; margin: auto; top: 8%;
+  width: min(980px, 92vw); max-height: 84vh; overflow: auto;
+  background: #0f141b; border: 1px solid #223040; border-radius: 16px;
+  padding: 14px; z-index: 1600; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.modal-head{
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-bottom: 8px;
+}
+.modal-head h2{ margin: 0; font-size: 18px; }
+.icon-btn{
+  background: transparent; color:#fff; cursor: pointer;
+  border: 1px solid #2a3746; border-radius: 10px; padding: 4px 8px;
+}
+.icon-btn:hover{ background:#1b2836; }
+
+.grid{
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+  gap: 12px; padding: 6px 2px;
+}
+.nft-card{
+  background:#0b0f15; border:1px solid #2a3746; border-radius:12px; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.nft-card img{ width:100%; aspect-ratio: 4/3; object-fit: cover; display:block; }
+.nft-card .meta{
+  padding:8px; display:flex; align-items:center; justify-content:space-between; gap:6px;
+}
+.nft-card .title{ font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nft-card button{
+  padding:6px 10px; border-radius:10px; border:1px solid #2a3746; background:#1d2936; color:#fff; cursor:pointer;
+}
+.nft-card button:hover{ filter:brightness(1.05); }
+.modal-foot{ display:flex; justify-content:flex-end; padding-top:8px; }
+.btn-secondary{
+  background:#1b2836; border:1px solid #2a3746; color:#fff; border-radius:10px; padding:6px 10px; cursor:pointer;
+}
+.btn-secondary:hover{ filter:brightness(1.05); }
