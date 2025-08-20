@@ -1,186 +1,101 @@
 :root{
-  --slot-w: 400px;
-  --slot-h: 300px;
+  --slot-w:400px;
+  --slot-h:300px;
 }
 
-/* ===== Base ===== */
-*{ box-sizing: border-box; }
-html,body{
-  margin: 0; padding: 0; min-height: 100%;
-  background: #0b0d10; color: #eee;
-  overflow-x: hidden;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#0b0d10;
+  color:#eee;
+  overflow-x:hidden;
 }
 
-/* ===== Topbar ===== */
-.topbar{
-  position: fixed; inset: 0 0 auto 0; height: 60px;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px; z-index: 1000; background: transparent;
-  pointer-events: none;
+.top-ui{
+  position:fixed;
+  top:0; left:0; right:0;
+  height:50px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 15px;
+  background:rgba(0,0,0,0.2);
+  z-index:1000;
 }
-.topbar .logo{
-  font-size: 22px; font-weight: 700; color:#fff;
-  pointer-events: auto;
+.logo{font-weight:bold; font-size:18px; color:#fff;}
+#connect{
+  background:#2ecc71; color:#fff; border:none;
+  padding:8px 14px; border-radius:6px; cursor:pointer;
 }
-.connect-btn{
-  background: linear-gradient(135deg, #ffb347, #ff7a00);
-  border: none; color:#fff; font-weight: 700; font-size: 16px;
-  padding: 10px 20px; border-radius: 12px; cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease;
-  pointer-events: auto;
-}
-.connect-btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,122,0,.4); }
 
-/* ===== Scene ===== */
 #scene{
-  position: relative;
-  margin-top: 60px;
-  min-height: 100vh;
-  background: url("img/background1.png") no-repeat center bottom;
-  background-size: cover;
-  overflow: hidden;
+  position:relative;
+  width:100%; min-height:100vh;
+  background:url("img/background1.png") no-repeat center bottom;
+  background-size:cover;
+  padding-top:60px;
 }
-
-/* layers */
-#slots{
-  position: absolute; inset: 0; z-index: 2;
-  pointer-events: none; /* пропускаємо кліки, лише + активні */
-}
-#placed{ position: absolute; inset: 0; z-index: 1; }
-
-/* slot + */
+#slots,#placed{position:absolute; inset:0;}
 .slot{
-  position: absolute;
-  pointer-events: auto;
-  border: 2px dashed rgba(255,255,255,.45);
-  display: flex; align-items: center; justify-content: center;
-  color:#fff; font-size: 24px; cursor: pointer;
-  background: rgba(255,255,255,.05);
-  border-radius: 8px;
+  position:absolute; width:var(--slot-w); height:var(--slot-h);
+  border:2px dashed rgba(255,255,255,.35);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
 }
-.slot::after{ content: "+"; }
+.slot::after{content:"+"; font-size:26px; color:#fff;}
 
-/* tiles */
-.tile-wrap{
-  position: absolute;
-  width: var(--slot-w); height: var(--slot-h);
-  overflow: hidden; border-radius: 10px;
-  box-shadow: 0 6px 16px rgba(0,0,0,.5);
-  cursor: pointer;
-}
-.tile-wrap.placeholder .tile-badge{ background:#ffcd1f; color:#2a2a2a; font-weight:700; }
-.tile-img{ width: 100%; height: 100%; display: block; object-fit: cover; }
+.tile-wrap{position:absolute;}
+.tile-img{width:100%; height:100%; display:block;}
 .tile-badge{
-  position: absolute; left: 8px; bottom: 6px;
-  font-size: 12px; background: rgba(0,0,0,.6); color:#fff;
-  padding: 2px 6px; border-radius: 8px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: calc(100% - 16px);
+  position:absolute; bottom:4px; left:6px;
+  font-size:12px; background:rgba(0,0,0,.5);
+  color:#fff; padding:2px 4px;
 }
 
-/* footer */
-.footer{
-  padding: 10px 12px; text-align: center;
-  background: rgba(0,0,0,.25);
-  border-top: 1px solid rgba(255,255,255,.08);
+/* Фарм бар */
+.farm-bar{
+  position:fixed; bottom:0; left:0; right:0;
+  background:#11161c;
+  padding:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  z-index:1000;
 }
+.farm-label{color:#fff;}
+.farm-progress{
+  flex:1; height:18px; background:#333;
+  border-radius:8px; overflow:hidden;
+}
+#farm-fill{
+  height:100%; width:0%;
+  background:linear-gradient(90deg,#2ecc71,#27ae60);
+  transition:width 0.5s;
+}
+.farm-value{color:#2ecc71; font-weight:bold;}
 
-/* ===== Modals (cartoon bright) ===== */
-.backdrop{
-  position: fixed; inset: 0; z-index: 1500;
-  background: rgba(0,0,0,.6);
-  backdrop-filter: blur(2px) saturate(1.2);
+/* Popup */
+.info-box{
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.6);
+  display:flex; align-items:center; justify-content:center;
+  z-index:2000;
 }
-
-.modal{
-  position: fixed; inset: 0; margin: auto; top: 8%;
-  width: min(980px, 92vw); max-height: 84vh; overflow: auto;
-  border-radius: 18px; padding: 16px;
-  z-index: 1600; box-shadow: 0 20px 60px rgba(0,0,0,.55);
-  border: 3px solid #2b3a4b;
+.hidden{display:none;}
+.info-content{
+  background:#fff; color:#333; border-radius:10px;
+  padding:20px; width:300px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+  position:relative;
 }
-
-/* picker — світлий "мульт" */
-.modal--picker{
-  background: linear-gradient(180deg,#f8f3e6 0%, #f0ead8 100%);
-  color:#2a2a2a;
+.close-btn{
+  position:absolute; top:8px; right:10px;
+  cursor:pointer; font-size:18px;
 }
-.modal--unit{
-  background: linear-gradient(180deg,#eaf6ff 0%, #e3f0ff 100%);
-  color:#1f2a37;
+.info-actions{margin-top:15px; display:flex; gap:10px;}
+.info-actions button{
+  flex:1; padding:8px;
+  border:none; border-radius:6px; cursor:pointer;
 }
-
-.modal-head{
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  margin-bottom: 10px;
-}
-.modal-head h2{ margin: 0; font-size: 20px; }
-
-.icon-btn{
-  background: #ffffff; color:#1f2a37; cursor: pointer;
-  border: 2px solid #2b3a4b; border-radius: 10px; padding: 4px 10px;
-}
-.icon-btn:hover{ filter: brightness(0.95); }
-
-.modal-foot{
-  display:flex; gap:10px; justify-content:flex-end; padding-top:10px;
-}
-
-.btn-secondary{
-  background:#fff; border:2px solid #2b3a4b; color:#1f2a37; border-radius:10px;
-  padding:8px 14px; cursor:pointer; font-weight:700;
-}
-.btn-primary{
-  background:#1d2936; border:2px solid #2b3a4b; color:#fff; border-radius:10px;
-  padding:8px 14px; cursor:pointer; font-weight:700;
-}
-.btn-accent{
-  background:#ff7a00; border:2px solid #2b3a4b; color:#fff; border-radius:10px;
-  padding:8px 14px; cursor:pointer; font-weight:800;
-}
-.btn-warning{
-  background:#ffcd1f; border:2px solid #2b3a4b; color:#2a2a2a; border-radius:10px;
-  padding:8px 14px; cursor:pointer; font-weight:800;
-}
-.btn-primary:hover,.btn-accent:hover,.btn-warning:hover,.btn-secondary:hover{ filter:brightness(1.05); }
-
-.spacer{ flex:1; }
-
-/* picker grid */
-.grid{
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
-  gap: 14px; padding: 6px 2px;
-}
-.nft-card{
-  background:#fff9e6;
-  border: 3px solid #2b3a4b; border-radius:14px; overflow:hidden;
-  display:flex; flex-direction:column;
-  box-shadow: 0 8px 18px rgba(0,0,0,.15);
-  transform: translateZ(0);
-  transition: transform .12s ease;
-}
-.nft-card:hover{ transform: translateY(-2px); }
-.nft-card img{ width:100%; aspect-ratio: 4/3; object-fit: cover; display:block; }
-.nft-card .meta{
-  padding:10px; display:flex; align-items:center; justify-content:space-between; gap:8px;
-}
-.nft-card .title{ font-size:14px; font-weight:700; color:#2a2a2a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.nft-card button{
-  padding:8px 12px; border-radius:10px; border:2px solid #2b3a4b; background:#1d2936; color:#fff; cursor:pointer; font-weight:700;
-}
-.nft-card button:hover{ filter:brightness(1.05); }
-
-/* unit modal specifics */
-.unit-body{
-  display:grid; grid-template-columns: 320px 1fr; gap:16px;
-}
-.unit-img{
-  width:100%; aspect-ratio: 4/3; object-fit: cover; border-radius:14px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
-  border: 3px solid #2b3a4b;
-}
-.unit-meta{ display:grid; gap:10px; align-content:start; }
-.unit-row{ display:flex; align-items:center; gap:8px; font-size:15px; }
-.unit-row span{ opacity:.85; min-width:130px; }
-.unit-sep{ border:0; border-top:2px dashed #2b3a4b; opacity:.7; margin:6px 0; }
+#unstakeBtn{background:#e74c3c; color:#fff;}
+#farmBtn{background:#3498db; color:#fff;}
