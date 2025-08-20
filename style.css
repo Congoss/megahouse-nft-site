@@ -46,7 +46,7 @@ body{
 /* слоти */
 .slot{
   position:absolute; width:var(--slot-w); height:var(--slot-h);
-  outline:2px dashed rgba(255,255,255,.35);  /* outline не змінює реальний розмір */
+  outline:2px dashed rgba(255,255,255,.35);  /* outline не змінює розмір */
   outline-offset:-2px;
   background:rgba(255,255,255,.08);
   display:flex; align-items:center; justify-content:center;
@@ -61,7 +61,7 @@ body{
   height:var(--slot-h);
 }
 .tile-img{
-  width:100%; height:100%; object-fit:cover;  /* повністю заповнює слот */
+  width:100%; height:100%; object-fit:cover;
   border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.45); display:block;
 }
 .tile-badge{
