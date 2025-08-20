@@ -3,6 +3,7 @@
   --slot-h: 300px;
 }
 
+/* ===== БАЗА ===== */
 *{ box-sizing: border-box; }
 html,body{
   margin: 0; padding: 0; min-height: 100%;
@@ -40,12 +41,18 @@ html,body{
   background-size: cover;
   overflow: hidden;
 }
-#slots{  position: absolute; inset: 0; z-index: 2; }
+
+/* шари сцени */
+#slots{
+  position: absolute; inset: 0; z-index: 2;
+  pointer-events: none;          /* пропускаємо кліки крізь порожні місця */
+}
 #placed{ position: absolute; inset: 0; z-index: 1; }
 
-/* ===== SLOTS ===== */
+/* слот “+” */
 .slot{
   position: absolute;
+  pointer-events: auto;          /* кліки активні ТІЛЬКИ на плюсах */
   border: 2px dashed rgba(255,255,255,.45);
   display: flex; align-items: center; justify-content: center;
   color:#fff; font-size: 24px; cursor: pointer;
