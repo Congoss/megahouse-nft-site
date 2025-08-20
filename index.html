@@ -1,42 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Megahouse — modular apartments</title>
-  <link rel="stylesheet" href="style.css"/>
-  <script src="https://unpkg.com/near-api-js/dist/near-api-js.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="hud" role="toolbar">
-    <div class="brand">Megahouse</div>
-    <div class="spacer"></div>
-    <div class="wallet">
-      <span id="accountStatus">Not connected</span>
-      <button id="connectBtn">Connect testnet</button>
-      <button id="disconnectBtn" class="ghost" hidden>Disconnect</button>
-    </div>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo">Megahouse</div>
+    <button class="connect-btn">Connect Wallet</button>
   </div>
 
+  <!-- Сцена з бекграундом -->
   <main id="scene">
-    <div id="slots"></div>
-    <div id="placed"></div>
+    <section id="grid"></section>
   </main>
-
-  <footer class="footer">© Megahouse demo</footer>
-
-  <!-- NFT Picker Modal -->
-  <div id="pickerBackdrop" class="backdrop" hidden></div>
-  <div id="pickerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pickerTitle" hidden>
-    <div class="modal-head">
-      <h2 id="pickerTitle">Choose an NFT</h2>
-      <button class="icon-btn" id="pickerClose" aria-label="Close">✕</button>
-    </div>
-    <div id="pickerGrid" class="grid"></div>
-    <div class="modal-foot">
-      <button id="pickerCancel" class="btn-secondary">Cancel</button>
-    </div>
-  </div>
 
   <script src="script.js"></script>
 </body>
