@@ -34,7 +34,37 @@
     </div>
   </div>
 
-  <!-- NEAR SDK (опційно; якщо немає — кнопка просто нічого не робитиме) -->
+  <!-- Unit Info Modal (по кліку на контейнер) -->
+  <div id="unitBackdrop" class="backdrop" hidden></div>
+  <div id="unitModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="unitTitle" hidden>
+    <div class="modal-head">
+      <h2 id="unitTitle">Apartment</h2>
+      <button class="icon-btn" id="unitClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="unit-body">
+      <img id="unitImg" alt="preview" class="unit-img"/>
+      <div class="unit-meta">
+        <div class="unit-row"><span>Title:</span><strong id="unitMetaTitle">—</strong></div>
+        <div class="unit-row"><span>Token ID:</span><strong id="unitToken">—</strong></div>
+        <div class="unit-row"><span>Owner:</span><strong id="unitOwner">—</strong></div>
+        <div class="unit-row"><span>Coords:</span><strong id="unitCoords">—</strong></div>
+        <div class="unit-row"><span>Floor bonus:</span><strong id="unitBonus">—</strong></div>
+        <hr class="unit-sep"/>
+        <div class="unit-row"><span>Buy now:</span><strong id="unitBuy">—</strong></div>
+        <div class="unit-row"><span>Highest bid:</span><strong id="unitBid">—</strong></div>
+        <div class="unit-row"><span>Auction ends:</span><strong id="unitEnds">—</strong></div>
+      </div>
+    </div>
+
+    <div class="modal-foot unit-actions">
+      <button id="btnMakeOffer" class="btn-primary" type="button">Make offer</button>
+      <button id="btnBid" class="btn-primary" type="button">Place bid</button>
+      <button id="btnBuyNow" class="btn-accent" type="button">Buy now</button>
+    </div>
+  </div>
+
+  <!-- NEAR SDK (опційно) -->
   <script src="https://unpkg.com/near-api-js/dist/near-api-js.js"></script>
   <script src="script.js"></script>
 </body>
