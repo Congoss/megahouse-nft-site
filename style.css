@@ -3,59 +3,76 @@
   --slot-h:300px;
 }
 
-/* Fix slot sizes */
+/* базове */
 *{ box-sizing:border-box; }
-
 html,body{ height:100%; margin:0; }
 body{
-  font-family:sans-serif;
-  background:#0b0d10;
-  color:#eee;
-  display:grid;
-  grid-template-rows:auto 1fr auto;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+  background:#0b0d10; color:#eee;
+  display:grid; grid-template-rows:auto 1fr auto;
 }
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 12px;
-  background:#11161c;
-}
-button{margin-left:6px; padding:6px 12px;}
+.topbar{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#11161c;}
+.actions > *{ margin-left:6px; }
+button{ padding:6px 12px; background:#1d2936; color:#fff; border:1px solid #2a3746; border-radius:8px; cursor:pointer; }
+button:hover{ filter:brightness(1.1); }
 
 #scene{
   position:relative;
   background:url("./img/background1.png") no-repeat center bottom;
-  background-size:cover;
-  overflow:hidden;
+  background-size:cover; overflow:hidden;
 }
-
 #slots,#placed{position:absolute; inset:0;}
 
+/* слоти */
 .slot{
-  position:absolute;
-  width:var(--slot-w);
-  height:var(--slot-h);
-  outline:2px dashed rgba(255,255,255,.35); /* замінив border на outline */
+  position:absolute; width:var(--slot-w); height:var(--slot-h);
+  outline:2px dashed rgba(255,255,255,.35);
   outline-offset:-2px;
-  background:rgba(255,255,255,.1);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; user-select:none; border-radius:12px;
 }
-.slot::after{content:"+"; font-size:28px; color:#fff; text-shadow:0 1px 2px #000;}
+.slot::after{content:"+"; font-size:28px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6);}
 
+/* плитки */
 .tile-wrap{position:absolute;}
-.tile-img{width:100%; height:100%; border-radius:8px; box-shadow:0 6px 14px rgba(0,0,0,.45);}
-.tile-badge{
-  position:absolute;
-  bottom:4px; left:6px;
-  font-size:12px;
-  background:rgba(0,0,0,.5);
-  color:#fff;
-  padding:2px 4px;
-  border-radius:4px;
+.tile-img{
+  width:100%; height:100%; object-fit:cover;
+  border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.45); display:block;
 }
-.footer{padding:8px; background:#11161c; text-align:center;}
+.tile-badge{
+  position:absolute; bottom:6px; left:8px; font-size:12px;
+  background:rgba(0,0,0,.55); color:#fff; padding:2px 6px; border-radius:6px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 16px);
+}
+.footer{padding:8px 12px; background:#11161c; text-align:center;}
+
+/* ===== Modal picker ===== */
+.backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:saturate(1.2) blur(2px); z-index:50;
+}
+.modal{
+  position:fixed; inset:auto 0 0 0; margin:auto; top:8%;
+  width:min(980px, 92vw); max-height:84vh; overflow:auto;
+  background:#0f141b; border:1px solid #223040; border-radius:16px; padding:14px; z-index:60;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
+.modal-head h2{margin:0; font-size:18px;}
+.icon-btn{background:transparent; border:1px solid #2a3746; border-radius:10px; padding:4px 8px;}
+.icon-btn:hover{background:#1b2836;}
+.grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr));
+  gap:12px; padding:6px 2px;
+}
+.nft-card{
+  border:1px solid #2a3746; border-radius:12px; overflow:hidden; background:#0b0f15;
+  display:flex; flex-direction:column;
+}
+.nft-card img{width:100%; aspect-ratio:4/3; object-fit:cover; display:block;}
+.nft-card .meta{padding:8px; display:flex; align-items:center; justify-content:space-between; gap:6px;}
+.nft-card .title{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.nft-card button{border-radius:10px;}
+.modal-foot{display:flex; justify-content:flex-end; padding-top:8px;}
+.btn-secondary{background:#1b2836; border:1px solid #2a3746;}
+.btn-secondary:hover{filter:brightness(1.1);}
