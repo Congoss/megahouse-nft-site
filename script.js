@@ -6,10 +6,10 @@ const tiles = [
 ];
 
 /************ GRID SETTINGS ************/
-const COLS = 10;            // 10 на поверх
+const COLS = 10;
 const ROWS = 12;
-const GROUND_RATIO = 0.22;  // частка "землі"
-const BURY = 0.5;           // перший ряд наполовину в землі
+const GROUND_RATIO = 0.22;
+const BURY = 0.5;
 
 const scene   = document.getElementById('scene');
 const slotsEl = document.getElementById('slots');
@@ -22,8 +22,7 @@ const pickerGrid     = document.getElementById('pickerGrid');
 const pickerClose    = document.getElementById('pickerClose');
 const pickerCancel   = document.getElementById('pickerCancel');
 
-const occ = new Set();         // зайняті клітинки
-let pendingSlot = null;        // {x,y}
+const occ = new Set();
 
 /************ (опційно) NEAR testnet status ************/
 let near, wallet, accountId = null;
@@ -103,8 +102,8 @@ function place(x,y,tile){
                     <div class="tile-badge">${tile.title}</div>`;
   placed.appendChild(wrap);
 
-  occ.add(`${x},${y}`);        // позначили клітинку
-  renderSlots();               // “+” зникне на цьому місці
+  occ.add(`${x},${y}`);
+  renderSlots();
   requestAnimationFrame(()=> wrap.style.opacity = 1);
 }
 
@@ -121,29 +120,37 @@ function renderPickerGrid(){
         <button data-idx="${idx}" type="button">Place</button>
       </div>
     `;
-    card.querySelector("button").addEventListener("click", (e)=>{
-      const i = +e.currentTarget.dataset.idx;
-      if (pendingSlot){
+    const btn = card.querySelector("button");
+    btn.addEventListener("click", ()=>{
+      // зчитуємо координати слота прямо з модалки (надійніше, ніж глобальна змінна)
+      const x = Number(pickerModal.dataset.x);
+      const y = Number(pickerModal.dataset.y);
+      const tile = tiles[Number(btn.dataset.idx)];
+      if (Number.isFinite(x) && Number.isFinite(y) && tile){
         closePicker();
-        place(pendingSlot.x, pendingSlot.y, tiles[i]);
-        pendingSlot = null;
+        place(x, y, tile);
+      } else {
+        console.warn("Picker coords or tile missing", {x,y,tile});
       }
     });
     pickerGrid.appendChild(card);
   });
 }
 function openPicker(x,y){
-  pendingSlot = {x,y};
+  // зберігаємо координати в атрибутах модалки
+  pickerModal.dataset.x = String(x);
+  pickerModal.dataset.y = String(y);
+
   renderPickerGrid();
   pickerBackdrop.hidden = false;
   pickerModal.hidden = false;
-  const firstBtn = pickerGrid.querySelector("button");
-  if (firstBtn) firstBtn.focus();
+  pickerGrid.querySelector("button")?.focus();
 }
 function closePicker(){
   pickerBackdrop.hidden = true;
   pickerModal.hidden = true;
-  pendingSlot = null;
+  delete pickerModal.dataset.x;
+  delete pickerModal.dataset.y;
 }
 
 /* керування модалкою */
@@ -155,10 +162,8 @@ window.addEventListener("keydown", (e)=>{ if(!pickerModal.hidden && e.key === "E
 /************ BOOT ************/
 window.addEventListener("resize", renderSlots);
 window.addEventListener("DOMContentLoaded", async ()=>{
-  // гаманці (опційно)
   document.getElementById("connectBtn")?.addEventListener("click", connectWallet);
   document.getElementById("disconnectBtn")?.addEventListener("click", disconnectWallet);
   await initNear();
-
   renderSlots();
 });
