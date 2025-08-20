@@ -15,7 +15,7 @@ const scene   = document.getElementById('scene');
 const slotsEl = document.getElementById('slots');
 const placed  = document.getElementById('placed');
 
-/* Modal refs */
+/* Modal refs (перевір, що ці id є в index.html) */
 const pickerBackdrop = document.getElementById('pickerBackdrop');
 const pickerModal    = document.getElementById('pickerModal');
 const pickerGrid     = document.getElementById('pickerGrid');
@@ -24,30 +24,27 @@ const pickerCancel   = document.getElementById('pickerCancel');
 
 const occ = new Set();
 
-/************ (опційно) NEAR testnet status ************/
+/************ NEAR testnet status (опц.) ************/
 let near, wallet, accountId = null;
-async function initNear(){
-  try{
-    if (!window.nearApi) return;
-    const nearApi = window.nearApi;
-    near = await nearApi.connect({
-      networkId: "testnet",
-      nodeUrl: "https://rpc.testnet.near.org",
-      walletUrl: "https://wallet.testnet.near.org",
-      helperUrl: "https://helper.testnet.near.org",
-    });
-    wallet = new nearApi.WalletConnection(near, null);
-    if (wallet.isSignedIn()) accountId = wallet.getAccountId();
-  }catch(e){ console.warn("NEAR init skipped:", e); }
-  refreshWalletUI();
-}
+async function initNear(){ try{
+  if (!window.nearApi) return;
+  const nearApi = window.nearApi;
+  near = await nearApi.connect({
+    networkId: "testnet",
+    nodeUrl: "https://rpc.testnet.near.org",
+    walletUrl: "https://wallet.testnet.near.org",
+    helperUrl: "https://helper.testnet.near.org",
+  });
+  wallet = new nearApi.WalletConnection(near, null);
+  if (wallet.isSignedIn()) accountId = wallet.getAccountId();
+}catch(e){} refreshWalletUI();}
 function refreshWalletUI(){
-  const status = document.getElementById("accountStatus");
-  const btnConnect = document.getElementById("connectBtn");
-  const btnDisconnect = document.getElementById("disconnectBtn");
-  if (!status || !btnConnect || !btnDisconnect) return;
-  if (accountId){ status.textContent = `Signed in: ${accountId}`; btnConnect.hidden=true; btnDisconnect.hidden=false; }
-  else { status.textContent = "Not connected"; btnConnect.hidden=false; btnDisconnect.hidden=true; }
+  const s = document.getElementById("accountStatus");
+  const c = document.getElementById("connectBtn");
+  const d = document.getElementById("disconnectBtn");
+  if(!(s&&c&&d)) return;
+  if(accountId){ s.textContent=`Signed in: ${accountId}`; c.hidden=true; d.hidden=false; }
+  else { s.textContent="Not connected"; c.hidden=false; d.hidden=true; }
 }
 function connectWallet(){ wallet?.requestSignIn(); }
 function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(); }
@@ -55,14 +52,14 @@ function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(
 /************ GRID UTILS ************/
 function slotSize(){
   let w = Math.floor(scene.clientWidth / COLS);
-  let h = Math.round(w * 3/4); // 4:3
+  let h = Math.round(w * 3/4);
   scene.style.setProperty("--slot-w", w + "px");
   scene.style.setProperty("--slot-h", h + "px");
   return { w, h };
 }
 function cellToPx(x,y,w,h){
   const groundY = scene.clientHeight * (1 - GROUND_RATIO);
-  const adjust = 50; // щоби нижній ряд точно був видимий
+  const adjust = 50;
   const top0 = groundY - h * (1 - BURY) - adjust;
   return { left:(scene.clientWidth - COLS*w)/2 + x*w, top: top0 - y*h };
 }
@@ -84,7 +81,7 @@ function renderSlots(){
       s.className = "slot";
       s.style.left = left + "px";
       s.style.top  = top  + "px";
-      s.addEventListener("click", ()=> openPicker(x,y));
+      s.addEventListener("click", ()=> openPicker(x,y));   // координати передаємо тут
       slotsEl.appendChild(s);
     }
   }
@@ -94,21 +91,20 @@ function renderSlots(){
 function place(x,y,tile){
   const {w,h} = slotSize();
   const {left, top} = cellToPx(x,y,w,h);
-
   const wrap = document.createElement("div");
   wrap.className = "tile-wrap";
-  wrap.style = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;opacity:0;transition:.15s opacity ease-out;`;
+  wrap.style = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;opacity:0;transition:.15s opacity;`;
   wrap.innerHTML = `<img class="tile-img" src="${tile.src}" alt="${tile.title}">
                     <div class="tile-badge">${tile.title}</div>`;
   placed.appendChild(wrap);
-
   occ.add(`${x},${y}`);
   renderSlots();
   requestAnimationFrame(()=> wrap.style.opacity = 1);
 }
 
 /************ MODAL PICKER ************/
-function renderPickerGrid(){
+// Рендеримо модалку, замкнувши x,y у замиканні:
+function renderPickerGrid(x,y){
   pickerGrid.innerHTML = "";
   tiles.forEach((t, idx)=>{
     const card = document.createElement("div");
@@ -120,44 +116,31 @@ function renderPickerGrid(){
         <button data-idx="${idx}" type="button">Place</button>
       </div>
     `;
-    const btn = card.querySelector("button");
-    btn.addEventListener("click", ()=>{
-      // зчитуємо координати слота прямо з модалки (надійніше, ніж глобальна змінна)
-      const x = Number(pickerModal.dataset.x);
-      const y = Number(pickerModal.dataset.y);
-      const tile = tiles[Number(btn.dataset.idx)];
-      if (Number.isFinite(x) && Number.isFinite(y) && tile){
-        closePicker();
-        place(x, y, tile);
-      } else {
-        console.warn("Picker coords or tile missing", {x,y,tile});
-      }
+    card.querySelector("button").addEventListener("click", (e)=>{
+      const i = +e.currentTarget.dataset.idx;
+      closePicker();
+      place(x, y, tiles[i]);     // тут уже точно є координати
     });
     pickerGrid.appendChild(card);
   });
 }
 function openPicker(x,y){
-  // зберігаємо координати в атрибутах модалки
-  pickerModal.dataset.x = String(x);
-  pickerModal.dataset.y = String(y);
-
-  renderPickerGrid();
+  if(!(pickerBackdrop&&pickerModal&&pickerGrid)) return;  // якщо модалки нема в HTML
+  renderPickerGrid(x,y);
   pickerBackdrop.hidden = false;
   pickerModal.hidden = false;
   pickerGrid.querySelector("button")?.focus();
 }
 function closePicker(){
-  pickerBackdrop.hidden = true;
-  pickerModal.hidden = true;
-  delete pickerModal.dataset.x;
-  delete pickerModal.dataset.y;
+  if(pickerBackdrop) pickerBackdrop.hidden = true;
+  if(pickerModal)    pickerModal.hidden = true;
 }
 
 /* керування модалкою */
-pickerClose.addEventListener("click", closePicker);
-pickerCancel.addEventListener("click", closePicker);
-pickerBackdrop.addEventListener("click", closePicker);
-window.addEventListener("keydown", (e)=>{ if(!pickerModal.hidden && e.key === "Escape") closePicker(); });
+pickerClose?.addEventListener("click", closePicker);
+pickerCancel?.addEventListener("click", closePicker);
+pickerBackdrop?.addEventListener("click", closePicker);
+window.addEventListener("keydown", (e)=>{ if(pickerModal && !pickerModal.hidden && e.key === "Escape") closePicker(); });
 
 /************ BOOT ************/
 window.addEventListener("resize", renderSlots);
