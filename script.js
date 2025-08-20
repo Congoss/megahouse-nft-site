@@ -1,4 +1,4 @@
-// ======= DEMO NFT LIST =======
+// ======= DEMO NFT LIST (поклади картинки у ./img/) =======
 const tiles = [
   {id:"bar-001", title:"Bar Container", owner:"demo.near", src:"img/bar.png"},
   {id:"aquarium-001", title:"Aquarium", owner:"demo.near", src:"img/aquarium.png"},
@@ -6,23 +6,29 @@ const tiles = [
 ];
 
 // ======= GRID SETTINGS =======
-// 10 контейнерів на поверх
-const COLS = 10;
+const COLS = 10;            // 10 контейнерів на поверх
 const ROWS = 12;
-const GROUND_RATIO = 0.22;
-const BURY = 0.5;
+const GROUND_RATIO = 0.22;  // частка "землі"
+const BURY = 0.5;           // перший ряд наполовину в землі
 
 const scene   = document.getElementById('scene');
 const slotsEl = document.getElementById('slots');
 const placed  = document.getElementById('placed');
 
-const occ = new Set();         // зайняті клітинки
+const pickerBackdrop = document.getElementById('pickerBackdrop');
+const pickerModal    = document.getElementById('pickerModal');
+const pickerGrid     = document.getElementById('pickerGrid');
+const pickerClose    = document.getElementById('pickerClose');
+const pickerCancel   = document.getElementById('pickerCancel');
 
-// ======= NEAR TESTNET WALLET =======
+const occ = new Set();         // зайняті клітинки
+let pendingSlot = null;        // {x,y} — куди вставляємо вибране NFT
+
+// ======= NEAR TESTNET WALLET (для демо статусу) =======
 let near, wallet, accountId = null;
 
 async function initNear(){
-  if (!window.nearApi) return; // бібліотека ще не завантажилась
+  if (!window.nearApi) return;
   const nearApi = window.nearApi;
   near = await nearApi.connect({
     networkId: "testnet",
@@ -34,22 +40,14 @@ async function initNear(){
   if (wallet.isSignedIn()) accountId = wallet.getAccountId();
   refreshWalletUI();
 }
-
 function refreshWalletUI(){
   const status = document.getElementById("accountStatus");
   const btnConnect = document.getElementById("connectBtn");
   const btnDisconnect = document.getElementById("disconnectBtn");
   if (!status || !btnConnect || !btnDisconnect) return;
-
-  if (accountId){
-    status.textContent = `Signed in: ${accountId}`;
-    btnConnect.hidden = true; btnDisconnect.hidden = false;
-  } else {
-    status.textContent = "Not connected";
-    btnConnect.hidden = false; btnDisconnect.hidden = true;
-  }
+  if (accountId){ status.textContent = `Signed in: ${accountId}`; btnConnect.hidden=true; btnDisconnect.hidden=false; }
+  else { status.textContent = "Not connected"; btnConnect.hidden=false; btnDisconnect.hidden=true; }
 }
-
 function connectWallet(){ wallet.requestSignIn(); }
 function disconnectWallet(){ wallet.signOut(); accountId=null; refreshWalletUI(); }
 
@@ -61,13 +59,12 @@ function slotSize(){
   scene.style.setProperty("--slot-h", h + "px");
   return { w, h };
 }
-
 function cellToPx(x,y,w,h){
   const groundY = scene.clientHeight * (1 - GROUND_RATIO);
-  const top0    = groundY - h * (1 - BURY);
+  const adjust = 50; // невелике підняття, щоб нижній ряд точно був видимий
+  const top0 = groundY - h * (1 - BURY) - adjust;
   return { left:(scene.clientWidth - COLS*w)/2 + x*w, top: top0 - y*h };
 }
-
 function available(x,y){
   if (occ.has(`${x},${y}`)) return false;
   return y === 0 || occ.has(`${x},${y-1}`);
@@ -86,19 +83,10 @@ function renderSlots(){
       s.className = "slot";
       s.style.left = left + "px";
       s.style.top  = top  + "px";
-      s.onclick = () => onSlotClick(x,y);
+      s.onclick = () => openPicker(x,y);
       slotsEl.appendChild(s);
     }
   }
-}
-
-// ======= SLOT CLICK -> CHOOSE NFT -> PLACE =======
-function onSlotClick(x,y){
-  const list = tiles.map((t,i)=>`${i+1}. ${t.title}`).join("\n");
-  const pick = +prompt("Choose an NFT:\n"+list, "1");
-  const tile = tiles[pick-1];
-  if (!tile) return;
-  place(x,y,tile); // ставимо NFT замість “+”
 }
 
 // ======= PLACE TILE =======
@@ -108,26 +96,63 @@ function place(x,y,tile){
 
   const wrap = document.createElement("div");
   wrap.className = "tile-wrap";
-  // робимо легке проявлення
   wrap.style = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;opacity:0;transition:.15s opacity ease-out;`;
   wrap.innerHTML = `<img class="tile-img" src="${tile.src}" alt="${tile.title}">
                     <div class="tile-badge">${tile.title}</div>`;
   placed.appendChild(wrap);
 
-  // позначаємо клітинку зайнятою
-  occ.add(`${x},${y}`);
-
-  // перерендеримо слоти — клікнутий “+” зникне, відкриються нові над ним
-  renderSlots();
-
-  // проявляємо
+  occ.add(`${x},${y}`);        // позначаємо клітинку зайнятою
+  renderSlots();               // “+” зникає, відкриваються верхні
   requestAnimationFrame(()=> wrap.style.opacity = 1);
 }
+
+// ======= MODAL PICKER =======
+function renderPickerGrid(){
+  pickerGrid.innerHTML = "";
+  tiles.forEach((t, idx)=>{
+    const card = document.createElement("div");
+    card.className = "nft-card";
+    card.innerHTML = `
+      <img src="${t.src}" alt="${t.title}">
+      <div class="meta">
+        <div class="title" title="${t.title}">${t.title}</div>
+        <button data-idx="${idx}">Place</button>
+      </div>
+    `;
+    card.querySelector("button").onclick = (e)=>{
+      const i = +e.currentTarget.dataset.idx;
+      if (!pendingSlot) return;
+      closePicker();
+      place(pendingSlot.x, pendingSlot.y, tiles[i]);
+      pendingSlot = null;
+    };
+    pickerGrid.appendChild(card);
+  });
+}
+function openPicker(x,y){
+  pendingSlot = {x,y};
+  renderPickerGrid();
+  pickerBackdrop.hidden = false;
+  pickerModal.hidden = false;
+  const firstBtn = pickerGrid.querySelector("button");
+  if (firstBtn) firstBtn.focus();
+}
+function closePicker(){
+  pickerBackdrop.hidden = true;
+  pickerModal.hidden = true;
+  pendingSlot = null;
+}
+
+// керування модалкою
+pickerClose.addEventListener("click", closePicker);
+pickerCancel.addEventListener("click", closePicker);
+pickerBackdrop.addEventListener("click", closePicker);
+window.addEventListener("keydown", (e)=>{ if(!pickerModal.hidden && e.key === "Escape") closePicker(); });
 
 // ======= BOOT =======
 window.addEventListener("resize", renderSlots);
 window.addEventListener("DOMContentLoaded", async ()=>{
-  // кнопки гаманця
+  // гаманці
   const c = document.getElementById("connectBtn");
   const d = document.getElementById("disconnectBtn");
   if (c) c.addEventListener("click", connectWallet);
