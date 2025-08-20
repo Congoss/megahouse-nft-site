@@ -8,29 +8,25 @@
 html,body{ height:100%; margin:0; }
 body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
-  background:#0b0d10;
-  color:#eee;
-  display:grid;
-  grid-template-rows: 1fr auto; /* сцена | футер */
+  background:#0b0d10; color:#eee;
+  display:grid; grid-template-rows: 1fr auto; /* сцена | футер */
 }
 
-/* сцена з фоном */
+/* сцена */
 #scene{
   position:relative;
   background:url("./img/background1.png") no-repeat center bottom;
-  background-size:cover;
-  overflow:hidden;
+  background-size:cover; overflow:hidden;
 }
 
-/* шари сцени */
-#slots{ position:absolute; inset:0; z-index:2; }   /* вище, приймає кліки */
+/* шари */
+#slots{ position:absolute; inset:0; z-index:2; }
 #placed{ position:absolute; inset:0; z-index:1; }
 
-/* плаваюча панель поверх бекграунду */
+/* HUD */
 .hud{
-  position:fixed;
-  top:12px; left:12px; right:12px;
-  z-index:1000;                       /* поверх усього */
+  position:fixed; top:12px; left:12px; right:12px;
+  z-index:1000;
   display:flex; align-items:center; gap:12px;
   padding:10px 12px;
   background:rgba(10,14,18,.35);
@@ -41,20 +37,16 @@ body{
 .brand{ font-weight:600; letter-spacing:.2px; }
 .spacer{ flex:1; }
 .hud button{
-  padding:6px 12px;
-  background:#1d2936;
-  color:#fff; border:1px solid #2a3746;
-  border-radius:10px; cursor:pointer;
+  padding:6px 12px; background:#1d2936; color:#fff;
+  border:1px solid #2a3746; border-radius:10px; cursor:pointer;
 }
 .hud button:hover{ filter:brightness(1.1); }
-.hud button.ghost{
-  background:transparent; color:#ddd; border-color:#2a3746;
-}
+.hud button.ghost{ background:transparent; color:#ddd; border-color:#2a3746; }
 
 /* слоти */
 .slot{
   position:absolute; width:var(--slot-w); height:var(--slot-h);
-  outline:2px dashed rgba(255,255,255,.35);  /* outline не ламає геометрію */
+  outline:2px dashed rgba(255,255,255,.35);
   outline-offset:-2px;
   background:rgba(255,255,255,.08);
   display:flex; align-items:center; justify-content:center;
@@ -71,13 +63,4 @@ body{
 .tile-badge{
   position:absolute; bottom:6px; left:8px; font-size:12px;
   background:rgba(0,0,0,.55); color:#fff; padding:2px 6px; border-radius:6px;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 16px);
-}
-
-/* футер прозорий */
-.footer{
-  padding:10px 12px;
-  text-align:center;
-  background:rgba(0,0,0,.25);
-  border-top:1px solid rgba(255,255,255,.08);
-}
+  white-space:nowrap; overflow:hidd
