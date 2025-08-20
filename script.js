@@ -1,12 +1,12 @@
-// ======= DEMO NFT LIST (поклади картинки у ./img/) =======
+/************ DEMO NFT ************/
 const tiles = [
-  {id:"bar-001", title:"Bar Container", owner:"demo.near", src:"img/bar.png"},
-  {id:"aquarium-001", title:"Aquarium", owner:"demo.near", src:"img/aquarium.png"},
-  {id:"tv-001", title:"TV Room", owner:"demo.near", src:"img/tv.png"}
+  {id:"bar-001",      title:"Bar Container", owner:"demo.near", src:"img/bar.png"},
+  {id:"aquarium-001", title:"Aquarium",      owner:"demo.near", src:"img/aquarium.png"},
+  {id:"tv-001",       title:"TV Room",       owner:"demo.near", src:"img/tv.png"}
 ];
 
-// ======= GRID SETTINGS =======
-const COLS = 10;            // 10 контейнерів на поверх
+/************ GRID SETTINGS ************/
+const COLS = 10;            // 10 на поверх
 const ROWS = 12;
 const GROUND_RATIO = 0.22;  // частка "землі"
 const BURY = 0.5;           // перший ряд наполовину в землі
@@ -15,6 +15,7 @@ const scene   = document.getElementById('scene');
 const slotsEl = document.getElementById('slots');
 const placed  = document.getElementById('placed');
 
+/* Modal refs */
 const pickerBackdrop = document.getElementById('pickerBackdrop');
 const pickerModal    = document.getElementById('pickerModal');
 const pickerGrid     = document.getElementById('pickerGrid');
@@ -22,22 +23,23 @@ const pickerClose    = document.getElementById('pickerClose');
 const pickerCancel   = document.getElementById('pickerCancel');
 
 const occ = new Set();         // зайняті клітинки
-let pendingSlot = null;        // {x,y} — куди вставляємо вибране NFT
+let pendingSlot = null;        // {x,y}
 
-// ======= NEAR TESTNET WALLET (для демо статусу) =======
+/************ (опційно) NEAR testnet status ************/
 let near, wallet, accountId = null;
-
 async function initNear(){
-  if (!window.nearApi) return;
-  const nearApi = window.nearApi;
-  near = await nearApi.connect({
-    networkId: "testnet",
-    nodeUrl: "https://rpc.testnet.near.org",
-    walletUrl: "https://wallet.testnet.near.org",
-    helperUrl: "https://helper.testnet.near.org",
-  });
-  wallet = new nearApi.WalletConnection(near, null);
-  if (wallet.isSignedIn()) accountId = wallet.getAccountId();
+  try{
+    if (!window.nearApi) return;
+    const nearApi = window.nearApi;
+    near = await nearApi.connect({
+      networkId: "testnet",
+      nodeUrl: "https://rpc.testnet.near.org",
+      walletUrl: "https://wallet.testnet.near.org",
+      helperUrl: "https://helper.testnet.near.org",
+    });
+    wallet = new nearApi.WalletConnection(near, null);
+    if (wallet.isSignedIn()) accountId = wallet.getAccountId();
+  }catch(e){ console.warn("NEAR init skipped:", e); }
   refreshWalletUI();
 }
 function refreshWalletUI(){
@@ -48,10 +50,10 @@ function refreshWalletUI(){
   if (accountId){ status.textContent = `Signed in: ${accountId}`; btnConnect.hidden=true; btnDisconnect.hidden=false; }
   else { status.textContent = "Not connected"; btnConnect.hidden=false; btnDisconnect.hidden=true; }
 }
-function connectWallet(){ wallet.requestSignIn(); }
-function disconnectWallet(){ wallet.signOut(); accountId=null; refreshWalletUI(); }
+function connectWallet(){ wallet?.requestSignIn(); }
+function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(); }
 
-// ======= GRID UTILS =======
+/************ GRID UTILS ************/
 function slotSize(){
   let w = Math.floor(scene.clientWidth / COLS);
   let h = Math.round(w * 3/4); // 4:3
@@ -61,7 +63,7 @@ function slotSize(){
 }
 function cellToPx(x,y,w,h){
   const groundY = scene.clientHeight * (1 - GROUND_RATIO);
-  const adjust = 50; // невелике підняття, щоб нижній ряд точно був видимий
+  const adjust = 50; // щоби нижній ряд точно був видимий
   const top0 = groundY - h * (1 - BURY) - adjust;
   return { left:(scene.clientWidth - COLS*w)/2 + x*w, top: top0 - y*h };
 }
@@ -70,7 +72,7 @@ function available(x,y){
   return y === 0 || occ.has(`${x},${y-1}`);
 }
 
-// ======= RENDER SLOTS =======
+/************ RENDER SLOTS ************/
 function renderSlots(){
   slotsEl.innerHTML = "";
   const {w,h} = slotSize();
@@ -83,13 +85,13 @@ function renderSlots(){
       s.className = "slot";
       s.style.left = left + "px";
       s.style.top  = top  + "px";
-      s.onclick = () => openPicker(x,y);
+      s.addEventListener("click", ()=> openPicker(x,y));
       slotsEl.appendChild(s);
     }
   }
 }
 
-// ======= PLACE TILE =======
+/************ PLACE TILE ************/
 function place(x,y,tile){
   const {w,h} = slotSize();
   const {left, top} = cellToPx(x,y,w,h);
@@ -101,12 +103,12 @@ function place(x,y,tile){
                     <div class="tile-badge">${tile.title}</div>`;
   placed.appendChild(wrap);
 
-  occ.add(`${x},${y}`);        // позначаємо клітинку зайнятою
-  renderSlots();               // “+” зникає, відкриваються верхні
+  occ.add(`${x},${y}`);        // позначили клітинку
+  renderSlots();               // “+” зникне на цьому місці
   requestAnimationFrame(()=> wrap.style.opacity = 1);
 }
 
-// ======= MODAL PICKER =======
+/************ MODAL PICKER ************/
 function renderPickerGrid(){
   pickerGrid.innerHTML = "";
   tiles.forEach((t, idx)=>{
@@ -116,16 +118,17 @@ function renderPickerGrid(){
       <img src="${t.src}" alt="${t.title}">
       <div class="meta">
         <div class="title" title="${t.title}">${t.title}</div>
-        <button data-idx="${idx}">Place</button>
+        <button data-idx="${idx}" type="button">Place</button>
       </div>
     `;
-    card.querySelector("button").onclick = (e)=>{
+    card.querySelector("button").addEventListener("click", (e)=>{
       const i = +e.currentTarget.dataset.idx;
-      if (!pendingSlot) return;
-      closePicker();
-      place(pendingSlot.x, pendingSlot.y, tiles[i]);
-      pendingSlot = null;
-    };
+      if (pendingSlot){
+        closePicker();
+        place(pendingSlot.x, pendingSlot.y, tiles[i]);
+        pendingSlot = null;
+      }
+    });
     pickerGrid.appendChild(card);
   });
 }
@@ -143,21 +146,19 @@ function closePicker(){
   pendingSlot = null;
 }
 
-// керування модалкою
+/* керування модалкою */
 pickerClose.addEventListener("click", closePicker);
 pickerCancel.addEventListener("click", closePicker);
 pickerBackdrop.addEventListener("click", closePicker);
 window.addEventListener("keydown", (e)=>{ if(!pickerModal.hidden && e.key === "Escape") closePicker(); });
 
-// ======= BOOT =======
+/************ BOOT ************/
 window.addEventListener("resize", renderSlots);
 window.addEventListener("DOMContentLoaded", async ()=>{
-  // гаманці
-  const c = document.getElementById("connectBtn");
-  const d = document.getElementById("disconnectBtn");
-  if (c) c.addEventListener("click", connectWallet);
-  if (d) d.addEventListener("click", disconnectWallet);
-
+  // гаманці (опційно)
+  document.getElementById("connectBtn")?.addEventListener("click", connectWallet);
+  document.getElementById("disconnectBtn")?.addEventListener("click", disconnectWallet);
   await initNear();
+
   renderSlots();
 });
