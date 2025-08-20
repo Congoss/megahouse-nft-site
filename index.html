@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Megahouse — modular apartments</title>
   <link rel="stylesheet" href="style.css"/>
-  <!-- NEAR API (опційно; для статусу гаманця) -->
   <script src="https://unpkg.com/near-api-js/dist/near-api-js.js"></script>
 </head>
 <body>
-  <!-- HUD поверх бекграунду -->
   <div class="hud" role="toolbar">
     <div class="brand">Megahouse</div>
     <div class="spacer"></div>
@@ -27,7 +25,7 @@
 
   <footer class="footer">© Megahouse demo</footer>
 
-  <!-- ===== NFT Picker Modal ===== -->
+  <!-- NFT Picker Modal -->
   <div id="pickerBackdrop" class="backdrop" hidden></div>
   <div id="pickerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pickerTitle" hidden>
     <div class="modal-head">
@@ -39,7 +37,6 @@
       <button id="pickerCancel" class="btn-secondary">Cancel</button>
     </div>
   </div>
-  <!-- ============================ -->
 
   <script src="script.js"></script>
 </body>
