@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Megahouse — modular apartments (400×300)</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
@@ -12,16 +12,19 @@
     <nav>
       <button id="connect">Connect (stub)</button>
       <button id="mint">Mint (stub)</button>
-      <a href="https://github.com/congoss/megahouse-nft-site" target="_blank">GitHub</a>
+      <a href="https://github.com/congoss/megahouse-nft-site" target="_blank" rel="noopener">GitHub</a>
     </nav>
   </header>
 
   <!-- Сцена з бекграундом -->
   <main id="scene">
-    <section id="grid"></section>
+    <!-- шар для клікабельних рамок (+) -->
+    <div id="slots"></div>
+    <!-- шар, де лежатимуть розміщені контейнери -->
+    <div id="placed"></div>
   </main>
 
-  <!-- Модальне вікно -->
+  <!-- Модальне вікно (поки не використовується) -->
   <div id="modal" class="hidden">
     <pre id="meta"></pre>
     <button id="close">Close</button>
