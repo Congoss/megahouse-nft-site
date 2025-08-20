@@ -10,10 +10,10 @@ const COLS = 10;
 const ROWS = 12;
 const BURY = 0.5;
 const BOTTOM_MARGIN = 40;
-const SIDE = 64;         // бічні поля
-const GAP  = 0;          // щільна кладка
-const SLOT_INSET = 2;    // слот «+» трохи менший
-const TOP_SAFE = 72;     // мін. відступ над верхнім рядом, щоб не ліз під HUD
+const SIDE = 64;      // бічні поля
+const GAP  = 0;       // щільна кладка
+const SLOT_INSET = 2; // слот «+» трохи менший
+const TOP_SAFE = 72;  // мінімум зверху під HUD
 
 /************ DOM ************/
 const scene   = document.getElementById("scene");
@@ -27,7 +27,7 @@ const pickerCancel   = document.getElementById("pickerCancel");
 
 const occ = new Set();
 
-/************ NEAR (опційно) ************/
+/************ NEAR (опц.) ************/
 let near, wallet, accountId = null;
 async function initNear() {
   try {
@@ -55,21 +55,43 @@ function refreshWalletUI(){
 function connectWallet(){ wallet?.requestSignIn(); }
 function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(); }
 
+/************ ДОПОМІЖНІ ************/
+// найвищий заповнений поверх (y), 0 — земля
+function highestFloor(){
+  let maxY = 0;
+  occ.forEach(key => {
+    const y = +key.split(",")[1];
+    if (y > maxY) maxY = y;
+  });
+  return maxY;
+}
+
+// гарантуємо, що #scene достатньо висока для всіх поверхів + запас зверху
+function ensureSceneMinHeightFor(layout){
+  const h = layout.h;
+  const highest = highestFloor(); // 0..N
+  // необхідна висота: (нижній ряд) + (всі поверхи над ним) + відступи внизу/вгорі
+  const need = Math.ceil( (1 + BURY) * h + highest * h + BOTTOM_MARGIN + TOP_SAFE );
+  const base = Math.max(window.innerHeight, need);
+  const current = parseInt(scene.style.minHeight || 0) || 0;
+  if (current < base) {
+    scene.style.minHeight = base + "px";
+    return true; // висоту збільшили — треба перерахувати лейаут
+  }
+  return false;
+}
+
 /************ ЛЕЙАУТ ************/
 function getLayout(){
-  // гарантуємо, що сцена має принаймні висоту екрана
-  const currentMin = parseInt(scene.style.minHeight || 0) || 0;
-  scene.style.minHeight = Math.max(window.innerHeight, currentMin) + "px";
-
   const W = scene.clientWidth;
   const H = scene.clientHeight;
 
-  const innerW = W - 2*SIDE - (COLS - 1)*GAP; // з GAP=0: W - 2*SIDE
+  const innerW = W - 2*SIDE - (COLS - 1)*GAP; // з GAP=0 -> W - 2*SIDE
   let w = Math.floor(innerW / COLS);
   let h = Math.round(w * 3/4);
 
-  // забезпечуємо видимість нижнього ряду
-  const minTopForRow0 = 60; // запас під HUD
+  // базова гарантія видимості нижнього ряду для поточного H
+  const minTopForRow0 = 60;
   const top0 = H - (1 + BURY) * h - BOTTOM_MARGIN;
   if (top0 < minTopForRow0) {
     const scale = (H - BOTTOM_MARGIN - minTopForRow0) / ((1 + BURY) * h);
@@ -94,15 +116,6 @@ function cellToPx(x,y,layout){
   return { left, top };
 }
 
-/* якщо верхні слоти під HUD — збільшуємо min-height сцени і перевідмальовуємо */
-function ensureSceneTallEnough(layout, minTopSeen){
-  if (minTopSeen >= TOP_SAFE) return false;
-  const needExtra = TOP_SAFE - minTopSeen;              // скільки не вистачає
-  const cur = parseInt(scene.style.minHeight || 0) || layout.H;
-  scene.style.minHeight = (cur + needExtra) + "px";     // саме min-height!
-  return true;
-}
-
 function available(x,y){
   if (occ.has(`${x},${y}`)) return false;
   return y === 0 || occ.has(`${x},${y-1}`);
@@ -123,17 +136,20 @@ function layoutPlaced(layout){
 
 /************ СЛОТИ ************/
 function renderSlots(){
-  // перший прохід
+  // 1) поточний лейаут
   let layout = getLayout();
-  slotsEl.innerHTML = "";
 
-  let minTop = Infinity;
+  // 2) перед рендером — забезпечуємо достатню висоту під усі поверхи
+  if (ensureSceneMinHeightFor(layout)) {
+    layout = getLayout(); // висота змінилась — перераховуємо
+  }
+
+  // 3) рендер
+  slotsEl.innerHTML = "";
   for (let y=0; y<ROWS; y++){
     for (let x=0; x<COLS; x++){
       if (!available(x,y)) continue;
       const {left, top} = cellToPx(x,y,layout);
-      if (top < minTop) minTop = top;
-
       const s = document.createElement("div");
       s.className = "slot";
       s.style.width  = (layout.w - 2*SLOT_INSET) + "px";
@@ -146,18 +162,22 @@ function renderSlots(){
     }
   }
 
-  // якщо верхній ряд поліз під HUD — додаємо висоти й малюємо ще раз
-  if (ensureSceneTallEnough(layout, minTop)) {
-    layout = getLayout();
-    return renderSlots(); // одного повтору достатньо
-  }
-
   layoutPlaced(layout);
 }
 
 /************ РОЗМІЩЕННЯ NFT ************/
 function place(x,y,tile){
-  const layout = getLayout();
+  // перед вставкою — переконуємось, що висоти вистачить і після додавання
+  let layout = getLayout();
+  // тимчасово додаємо y у розрахунок «найвищого» й, якщо треба, збільшуємо сцену
+  const prevHighest = highestFloor();
+  const pretendHighest = Math.max(prevHighest, y);
+  const need = Math.ceil( (1 + BURY) * layout.h + pretendHighest * layout.h + BOTTOM_MARGIN + TOP_SAFE );
+  if ((parseInt(scene.style.minHeight || 0) || 0) < Math.max(window.innerHeight, need)) {
+    scene.style.minHeight = Math.max(window.innerHeight, need) + "px";
+    layout = getLayout();
+  }
+
   const {left, top} = cellToPx(x,y,layout);
 
   const wrap = document.createElement("div");
