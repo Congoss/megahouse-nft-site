@@ -12,7 +12,6 @@
     <nav class="actions">
       <button id="connect">Connect (stub)</button>
       <button id="mint">Mint (stub)</button>
-      <a href="https://github.com/congoss/megahouse-nft-site" target="_blank" rel="noopener">GitHub</a>
     </nav>
   </header>
 
@@ -22,6 +21,20 @@
   </main>
 
   <footer class="footer">© Megahouse demo</footer>
+
+  <!-- Modal picker -->
+  <div id="pickerBackdrop" class="backdrop" hidden></div>
+  <div id="pickerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pickerTitle" hidden>
+    <div class="modal-head">
+      <h2 id="pickerTitle">Choose an NFT</h2>
+      <button class="icon-btn" id="pickerClose" aria-label="Close">✕</button>
+    </div>
+    <div id="pickerGrid" class="grid"></div>
+    <div class="modal-foot">
+      <button id="pickerCancel" class="btn-secondary">Cancel</button>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
