@@ -7,13 +7,13 @@
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <!-- Topbar (прозорий) -->
+  <!-- Topbar -->
   <div class="topbar">
     <div class="logo">Megahouse</div>
     <button id="connectBtn" class="connect-btn" type="button">Connect Wallet</button>
   </div>
 
-  <!-- Сцена -->
+  <!-- Scene -->
   <main id="scene">
     <div id="slots"></div>
     <div id="placed"></div>
@@ -23,9 +23,9 @@
 
   <!-- NFT Picker Modal -->
   <div id="pickerBackdrop" class="backdrop" hidden></div>
-  <div id="pickerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pickerTitle" hidden>
+  <div id="pickerModal" class="modal modal--picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle" hidden>
     <div class="modal-head">
-      <h2 id="pickerTitle">Choose an NFT</h2>
+      <h2 id="pickerTitle">Choose a module</h2>
       <button class="icon-btn" id="pickerClose" aria-label="Close">✕</button>
     </div>
     <div id="pickerGrid" class="grid"></div>
@@ -36,7 +36,7 @@
 
   <!-- Unit Info Modal -->
   <div id="unitBackdrop" class="backdrop" hidden></div>
-  <div id="unitModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="unitTitle" hidden>
+  <div id="unitModal" class="modal modal--unit" role="dialog" aria-modal="true" aria-labelledby="unitTitle" hidden>
     <div class="modal-head">
       <h2 id="unitTitle">Apartment</h2>
       <button class="icon-btn" id="unitClose" aria-label="Close">✕</button>
@@ -58,6 +58,8 @@
     </div>
 
     <div class="modal-foot unit-actions">
+      <button id="btnUnstake" class="btn-warning" type="button">Unstake</button>
+      <div class="spacer"></div>
       <button id="btnMakeOffer" class="btn-primary" type="button">Make offer</button>
       <button id="btnBid" class="btn-primary" type="button">Place bid</button>
       <button id="btnBuyNow" class="btn-accent" type="button">Buy now</button>
