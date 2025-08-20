@@ -34,3 +34,59 @@
   <script src="script.js"></script>
 </body>
 </html>
+/* Сцена з бекграундом (земля 20–25% внизу, небо вище) */
+#scene{
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: url("img/background1.png") no-repeat center bottom;
+  background-size: cover;
+  overflow: hidden;
+}
+
+/* Шари */
+#slots, #placed{
+  position:absolute; inset:0;
+  pointer-events:none; /* рамки вмикаємо точково */
+}
+
+/* Рамка доступного слоту */
+.slot{
+  position:absolute;
+  width: var(--slot-w);
+  height: var(--slot-h);
+  box-sizing:border-box;
+  border:2px dashed rgba(255,255,255,.35);
+  background: rgba(255,255,255,.10); /* ~90% прозора */
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:auto; cursor:pointer;
+  transition: .12s ease;
+}
+.slot:hover{ background: rgba(255,255,255,.18); }
+
+/* «+» у центрі рамки */
+.slot::after{
+  content:"+";
+  font: 700 28px/1 ui-sans-serif,system-ui,Segoe UI,Arial;
+  color: rgba(255,255,255,.9);
+  text-shadow:0 2px 6px rgba(0,0,0,.4);
+}
+
+/* Плитка-контейнер */
+.tile-img{
+  position:absolute;
+  width: var(--slot-w);
+  height: var(--slot-h);
+  object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  border-radius:8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.35);
+}
+
+/* бейдж (опціонально) */
+.tile-badge{
+  position:absolute; left:8px; bottom:8px;
+  background:rgba(0,0,0,.55);
+  color:#fff; font-size:12px; padding:2px 6px; border-radius:4px;
+}
