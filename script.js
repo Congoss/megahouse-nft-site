@@ -1,14 +1,17 @@
-/************ DEMO NFT ************/
+/************ Demo NFTs ************/
 const tiles = [
   { id: "bar-001",      title: "Bar Container", owner: "demo.near", src: "img/bar.png" },
   { id: "aquarium-001", title: "Aquarium",      owner: "demo.near", src: "img/aquarium.png" },
   { id: "tv-001",       title: "TV Room",       owner: "demo.near", src: "img/tv.png" }
 ];
 
-/************ ПАРАМЕТРИ ************/
+/************ Config ************/
 const COLS = 10, ROWS = 12;
 const BURY = 0.5, BOTTOM_MARGIN = 40, SIDE = 64;
 const GAP  = 0, SLOT_INSET = 2, TOP_SAFE = 72;
+
+// ► шлях до згенерованих лісів (плейсхолдер після Unstake)
+const BEAMS_SRC = "img/scaffold.png";
 
 /************ DOM ************/
 const scene   = document.getElementById("scene");
@@ -24,11 +27,13 @@ const pickerCancel   = document.getElementById("pickerCancel");
 const unitBackdrop = document.getElementById("unitBackdrop");
 const unitModal    = document.getElementById("unitModal");
 const unitClose    = document.getElementById("unitClose");
+const btnUnstake   = document.getElementById("btnUnstake");
 
-const occ = new Set();       // зайняті "x,y"
-const unitMeta = new Map();  // дані юнітів по ключу "x,y"
+const occ = new Set();        // зайняті "x,y" (у т.ч. плейсхолдер)
+const unitMeta = new Map();   // дані юнітів по ключу "x,y"
+let currentUnitKey = null;
 
-/************ (опційний) NEAR ************/
+/************ (optional) NEAR ************/
 let near, wallet;
 async function initNear() {
   try {
@@ -45,7 +50,7 @@ async function initNear() {
 }
 document.getElementById("connectBtn")?.addEventListener("click", ()=> wallet?.requestSignIn());
 
-/************ ДОПОМІЖНІ ************/
+/************ Helpers ************/
 function highestFloor(){
   let maxY = 0;
   occ.forEach(k => { const y = +k.split(",")[1]; if (y > maxY) maxY = y; });
@@ -53,15 +58,13 @@ function highestFloor(){
 }
 function ensureSceneMinHeightFor(layout){
   const h = layout.h;
-  const nextFloor = highestFloor() + 1; // резерв під наступний ряд зі слотами
+  const nextFloor = highestFloor() + 1;
   const need = Math.ceil( (1 + BURY) * h + nextFloor * h + BOTTOM_MARGIN + TOP_SAFE );
   const base = Math.max(window.innerHeight, need);
   const current = parseInt(scene.style.minHeight || 0) || 0;
   if (current < base) { scene.style.minHeight = base + "px"; return true; }
   return false;
 }
-
-/************ ЛЕЙАУТ ************/
 function getLayout(){
   const W = scene.clientWidth, H = scene.clientHeight;
   const innerW = W - 2*SIDE - (COLS - 1)*GAP;
@@ -94,7 +97,7 @@ function available(x,y){
   return y === 0 || occ.has(`${x},${y-1}`);
 }
 
-/************ РОЗКЛАДКА ВСТАНОВЛЕНИХ ************/
+/************ Layout placed ************/
 function layoutPlaced(layout){
   [...placed.children].forEach(el=>{
     const x = +el.dataset.x, y = +el.dataset.y;
@@ -106,7 +109,7 @@ function layoutPlaced(layout){
   });
 }
 
-/************ СЛОТИ ************/
+/************ Slots ************/
 function renderSlots(){
   let layout = getLayout();
   if (ensureSceneMinHeightFor(layout)) layout = getLayout();
@@ -130,11 +133,10 @@ function renderSlots(){
   layoutPlaced(layout);
 }
 
-/************ РОЗМІЩЕННЯ NFT ************/
+/************ Place & Unstake ************/
 function place(x,y,tile){
   let layout = getLayout();
 
-  // резерв висоти під ряд, що додається
   const prevHighest = highestFloor();
   const next = Math.max(prevHighest, y) + 1;
   const need = Math.ceil( (1 + BURY) * layout.h + next * layout.h + BOTTOM_MARGIN + TOP_SAFE );
@@ -162,6 +164,7 @@ function place(x,y,tile){
     owner: tile.owner,
     src: tile.src,
     x, y,
+    placeholder: false,
     buyNow: null,
     highestBid: null,
     auctionEnds: null
@@ -172,7 +175,32 @@ function place(x,y,tile){
   requestAnimationFrame(()=> { wrap.style.opacity = 1; });
 }
 
-/************ PICKER ************/
+function unstakeUnit(key){
+  const meta = unitMeta.get(key);
+  if (!meta) return;
+  // Знаходимо DOM елемент
+  const el = [...placed.children].find(n => `${n.dataset.x},${n.dataset.y}` === key);
+  if (!el) return;
+
+  // Перетворюємо на плейсхолдер (ліса)
+  el.classList.add("placeholder");
+  el.querySelector(".tile-img").src = BEAMS_SRC;
+  const badge = el.querySelector(".tile-badge");
+  badge.textContent = "Under maintenance";
+  badge.title = "This slot is supported by scaffolding";
+
+  // оновлюємо мета
+  meta.placeholder = true;
+  meta.title = "Scaffolding";
+  meta.owner = null;
+  meta.src = BEAMS_SRC;
+  unitMeta.set(key, meta);
+
+  // occ залишається зайнятим — плейсхолдер тримає поверхи
+  closeUnit();
+}
+
+/************ Picker ************/
 function renderPickerGrid(x,y){
   pickerGrid.innerHTML = "";
   tiles.forEach((t, idx)=>{
@@ -207,21 +235,29 @@ pickerClose?.addEventListener("click", closePicker);
 pickerCancel?.addEventListener("click", closePicker);
 pickerBackdrop?.addEventListener("click", closePicker);
 
-/************ UNIT INFO ************/
+/************ Unit Info ************/
 function openUnitInfo(x,y){
-  const data = unitMeta.get(`${x},${y}`);
+  const key = `${x},${y}`;
+  const data = unitMeta.get(key);
   if (!data) return;
+  currentUnitKey = key;
 
+  // заповнення
   document.getElementById("unitImg").src = data.src;
   document.getElementById("unitMetaTitle").textContent = data.title;
-  document.getElementById("unitToken").textContent = data.tokenId;
-  document.getElementById("unitOwner").textContent = data.owner || "—";
+  document.getElementById("unitToken").textContent = data.placeholder ? "—" : data.tokenId;
+  document.getElementById("unitOwner").textContent = data.owner ?? "—";
   document.getElementById("unitCoords").textContent = `x:${x+1}  y:${y+1}`;
   const bonus = y === 0 ? "+50%" : y === 1 ? "+35%" : y === 2 ? "+25%" : y === 3 ? "+15%" : "+0%";
   document.getElementById("unitBonus").textContent = bonus;
   document.getElementById("unitBuy").textContent = data.buyNow ? `${data.buyNow} Ⓝ` : "—";
   document.getElementById("unitBid").textContent = data.highestBid ? `${data.highestBid} Ⓝ` : "—";
   document.getElementById("unitEnds").textContent = data.auctionEnds ? new Date(data.auctionEnds).toLocaleString() : "—";
+
+  // кнопки: якщо плейсхолдер — ховаємо торгові дії
+  document.getElementById("btnMakeOffer").disabled = data.placeholder;
+  document.getElementById("btnBid").disabled       = data.placeholder;
+  document.getElementById("btnBuyNow").disabled    = data.placeholder;
 
   unitBackdrop.hidden = false;
   unitModal.hidden = false;
@@ -233,11 +269,17 @@ function openUnitInfo(x,y){
 function closeUnit(){
   unitBackdrop.hidden = true;
   unitModal.hidden = true;
+  currentUnitKey = null;
 }
 unitBackdrop?.addEventListener("click", closeUnit);
 unitClose?.addEventListener("click", closeUnit);
+btnUnstake?.addEventListener("click", ()=>{
+  if (!currentUnitKey) return;
+  // тут може бути виклик контракту unstake; поки що — локальна дія:
+  unstakeUnit(currentUnitKey);
+});
 
-/************ Події ************/
+/************ Init ************/
 window.addEventListener("resize", ()=>{ scene.style.minHeight = ""; renderSlots(); });
 window.addEventListener("DOMContentLoaded", async ()=>{
   await initNear();
