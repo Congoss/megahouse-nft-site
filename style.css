@@ -1,7 +1,6 @@
 :root{
   --slot-w:400px;
   --slot-h:300px;
-  --bg-y:0px;                 /* керуємо паралаксом */
 }
 
 /* базове */
@@ -10,29 +9,26 @@ html,body{ height:100%; margin:0; }
 body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
   background:#0b0d10; color:#eee;
-  display:grid; grid-template-rows: 1fr auto; /* сцена | футер */
+  display:grid; grid-template-rows: 1fr auto;
 }
 
 /* сцена */
 #scene{
   position:relative;
-  background:url("./img/background1.png") no-repeat center calc(100% + var(--bg-y));
+  background:url("./img/background1.png") no-repeat center bottom;
   background-size:cover; overflow:hidden;
 }
 
 /* шари */
-#slots{ position:absolute; inset:0; z-index:999; }  /* вище за плитки */
+#slots{ position:absolute; inset:0; z-index:999; } /* слоти поверх */
 #placed{ position:absolute; inset:0; z-index:1; }
 
 /* HUD */
 .hud{
-  position:fixed; top:12px; left:12px; right:12px;
-  z-index:1000;
+  position:fixed; top:12px; left:12px; right:12px; z-index:1000;
   display:flex; align-items:center; gap:12px;
-  padding:10px 12px;
-  background:rgba(10,14,18,.35);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:14px;
+  padding:10px 12px; background:rgba(10,14,18,.35);
+  border:1px solid rgba(255,255,255,.12); border-radius:14px;
   backdrop-filter: blur(6px) saturate(1.1);
 }
 .brand{ font-weight:600; letter-spacing:.2px; }
@@ -44,26 +40,26 @@ body{
 .hud button:hover{ filter:brightness(1.1); }
 .hud button.ghost{ background:transparent; color:#ddd; border-color:#2a3746; }
 
-/* слоти */
+/* слот з "+" — точно під розмір або на 2px менше (регулюємо в JS), без округлення */
 .slot{
-  position:absolute; width:var(--slot-w); height:var(--slot-h);
-  outline:2px dashed rgba(255,255,255,.35);
-  outline-offset:-2px;
-  background:rgba(255,255,255,.08);
+  position:absolute;
+  border:2px dashed rgba(255,255,255,.45);
   display:flex; align-items:center; justify-content:center;
-  cursor:pointer; user-select:none; border-radius:12px;
+  color:#fff; font-size:24px; cursor:pointer;
+  box-sizing:border-box;
 }
-.slot::after{content:"+"; font-size:28px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6);}
 
-/* плитки */
+/* плитка (NFT) */
 .tile-wrap{
   position:absolute;
   width:var(--slot-w);
   height:var(--slot-h);
+  box-shadow:0 4px 10px rgba(0,0,0,.5);
+  border-radius:0; /* без заокруглення кутів */
+  overflow:hidden;
 }
 .tile-img{
-  width:100%; height:100%; object-fit:cover;
-  border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.45); display:block;
+  width:100%; height:100%; object-fit:cover; display:block;
 }
 .tile-badge{
   position:absolute; bottom:6px; left:8px; font-size:12px;
