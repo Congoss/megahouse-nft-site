@@ -8,9 +8,8 @@ const tiles = [
 /************ НАЛАШТУВАННЯ СЦЕНИ ************/
 const COLS = 10;            // 10 на поверх
 const ROWS = 12;
-const GROUND_RATIO = 0.24;  // трохи більше "землі", щоб ряди були вище
-const BURY = 0.5;           // перший ряд наполовину в землі
-const VIEW_MARGIN = 80;     // мінімальна відстань від верху до першого ряду
+const BURY = 0.5;           // перший ряд наполовину в "землі"
+const BOTTOM_MARGIN = 40;   // відступ від низу екрана до нижнього ряду (щоб + були завжди видимі)
 
 const scene   = document.getElementById('scene');
 const slotsEl = document.getElementById('slots');
@@ -52,7 +51,7 @@ function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(
 
 /************ РОЗМІРИ / ПОЗИЦІОНУВАННЯ ************/
 function slotSize(){
-  // 4:3 — під твої PNG 400x300
+  // 4:3 — під PNG 400x300
   let w = Math.floor(scene.clientWidth / COLS);
   let h = Math.round(w * 3/4);
   scene.style.setProperty("--slot-w", w + "px");
@@ -60,16 +59,11 @@ function slotSize(){
   return { w, h };
 }
 
-// КЛЮЧОВЕ: перший ряд завжди в межах вікна (кламп)
+// ПРИВ’ЯЗКА ДО НИЗУ ВІКНА: перший ряд завжди бачимо
 function cellToPx(x,y,w,h){
   const H = scene.clientHeight;
-  const groundY = H * (1 - GROUND_RATIO);    // де «земля»
-  let top0 = groundY - h * (1 - BURY);       // теоретичний top для y=0
-
-  const maxTop = H - h - VIEW_MARGIN;        // не нижче низу - margin
-  const minTop = VIEW_MARGIN;                // не вище верхнього margin
-  top0 = Math.max(minTop, Math.min(maxTop, top0));
-
+  // top для y=0: відштовхуємось від низу екрана
+  const top0 = H - (1 + BURY) * h - BOTTOM_MARGIN;
   const left = (scene.clientWidth - COLS * w) / 2 + x * w;
   const top  = top0 - y * h;
   return { left, top };
@@ -129,7 +123,7 @@ function place(x,y,tile){
   placed.appendChild(wrap);
 
   occ.add(`${x},${y}`);
-  renderSlots();                 // «+» зникне, зверху відкриються нові
+  renderSlots();                 // «+» зникне на цій клітинці
   requestAnimationFrame(()=> wrap.style.opacity = 1);
 }
 
