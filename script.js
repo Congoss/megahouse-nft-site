@@ -5,11 +5,12 @@ const tiles = [
   {id:"tv-001",       title:"TV Room",       owner:"demo.near", src:"img/tv.png"}
 ];
 
-/************ GRID SETTINGS ************/
+/************ НАЛАШТУВАННЯ СЦЕНИ ************/
 const COLS = 10;            // 10 на поверх
 const ROWS = 12;
-const GROUND_RATIO = 0.22;  // частка "землі"
+const GROUND_RATIO = 0.24;  // трохи більше "землі", щоб ряди були вище
 const BURY = 0.5;           // перший ряд наполовину в землі
+const VIEW_MARGIN = 80;     // мінімальна відстань від верху до першого ряду
 
 const scene   = document.getElementById('scene');
 const slotsEl = document.getElementById('slots');
@@ -24,7 +25,7 @@ const pickerCancel   = document.getElementById('pickerCancel');
 
 const occ = new Set();
 
-/************ (опційно) NEAR testnet status ************/
+/************ (опційно) NEAR testnet статус ************/
 let near, wallet, accountId = null;
 async function initNear(){ try{
   if (!window.nearApi) return;
@@ -49,41 +50,51 @@ function refreshWalletUI(){
 function connectWallet(){ wallet?.requestSignIn(); }
 function disconnectWallet(){ wallet?.signOut(); accountId=null; refreshWalletUI(); }
 
-/************ SIZING / LAYOUT ************/
+/************ РОЗМІРИ / ПОЗИЦІОНУВАННЯ ************/
 function slotSize(){
-  // 4:3 під твої PNG (400×300)
+  // 4:3 — під твої PNG 400x300
   let w = Math.floor(scene.clientWidth / COLS);
   let h = Math.round(w * 3/4);
   scene.style.setProperty("--slot-w", w + "px");
   scene.style.setProperty("--slot-h", h + "px");
   return { w, h };
 }
+
+// КЛЮЧОВЕ: перший ряд завжди в межах вікна (кламп)
 function cellToPx(x,y,w,h){
-  const groundY = scene.clientHeight * (1 - GROUND_RATIO);
-  const adjust = 50; // невелике підняття, щоб нижній ряд точно був видимий
-  const top0 = groundY - h * (1 - BURY) - adjust;
-  return { left:(scene.clientWidth - COLS*w)/2 + x*w, top: top0 - y*h };
+  const H = scene.clientHeight;
+  const groundY = H * (1 - GROUND_RATIO);    // де «земля»
+  let top0 = groundY - h * (1 - BURY);       // теоретичний top для y=0
+
+  const maxTop = H - h - VIEW_MARGIN;        // не нижче низу - margin
+  const minTop = VIEW_MARGIN;                // не вище верхнього margin
+  top0 = Math.max(minTop, Math.min(maxTop, top0));
+
+  const left = (scene.clientWidth - COLS * w) / 2 + x * w;
+  const top  = top0 - y * h;
+  return { left, top };
 }
+
 function available(x,y){
   if (occ.has(`${x},${y}`)) return false;
   return y === 0 || occ.has(`${x},${y-1}`);
 }
 
-/* Перелайаут уже розміщених плиток (ВАЖЛИВО проти «роз’їзду» після resize) */
+/* Перелайаут уже розміщених плиток */
 function layoutPlaced(){
   const {w,h} = slotSize();
   [...placed.children].forEach(el=>{
     const x = +el.dataset.x;
     const y = +el.dataset.y;
     const {left, top} = cellToPx(x,y,w,h);
-    el.style.left = left + "px";
-    el.style.top  = top  + "px";
+    el.style.left   = left + "px";
+    el.style.top    = top  + "px";
     el.style.width  = w + "px";
     el.style.height = h + "px";
   });
 }
 
-/************ RENDER SLOTS ************/
+/************ РЕНДЕР СЛОТІВ ************/
 function renderSlots(){
   slotsEl.innerHTML = "";
   const {w,h} = slotSize();
@@ -100,11 +111,10 @@ function renderSlots(){
       slotsEl.appendChild(s);
     }
   }
-  // після перемальовування слотів — оновлюємо позиції/розміри плиток
   layoutPlaced();
 }
 
-/************ PLACE TILE ************/
+/************ РОЗМІЩЕННЯ NFT ************/
 function place(x,y,tile){
   const {w,h} = slotSize();
   const {left, top} = cellToPx(x,y,w,h);
@@ -119,11 +129,11 @@ function place(x,y,tile){
   placed.appendChild(wrap);
 
   occ.add(`${x},${y}`);
-  renderSlots();                 // «+» зникне, відкриються верхні
+  renderSlots();                 // «+» зникне, зверху відкриються нові
   requestAnimationFrame(()=> wrap.style.opacity = 1);
 }
 
-/************ MODAL PICKER ************/
+/************ МОДАЛЬНИЙ ВИБІР ************/
 function renderPickerGrid(x,y){
   pickerGrid.innerHTML = "";
   tiles.forEach((t, idx)=>{
@@ -156,5 +166,16 @@ function closePicker(){
   if(pickerModal)    pickerModal.hidden = true;
 }
 
-/* керування модалкою */
+/************ ПОДІЇ ТА СТАРТ ************/
 pickerClose?.addEventListener("click", closePicker);
+pickerCancel?.addEventListener("click", closePicker);
+pickerBackdrop?.addEventListener("click", closePicker);
+window.addEventListener("keydown", (e)=>{ if(pickerModal && !pickerModal.hidden && e.key === "Escape") closePicker(); });
+
+window.addEventListener("resize", ()=>{ renderSlots(); });   // тримає «+» в кадрі
+window.addEventListener("DOMContentLoaded", async ()=>{
+  document.getElementById("connectBtn")?.addEventListener("click", connectWallet);
+  document.getElementById("disconnectBtn")?.addEventListener("click", disconnectWallet);
+  await initNear();
+  renderSlots();
+});
