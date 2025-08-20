@@ -9,7 +9,7 @@
   <script src="https://unpkg.com/near-api-js/dist/near-api-js.js"></script>
 </head>
 <body>
-  <!-- Плаваюча панель керування (без чорної смуги) -->
+  <!-- HUD поверх бекграунду -->
   <div class="hud" role="toolbar">
     <div class="brand">Megahouse</div>
     <div class="spacer"></div>
@@ -26,6 +26,20 @@
   </main>
 
   <footer class="footer">© Megahouse demo</footer>
+
+  <!-- ===== NFT Picker Modal ===== -->
+  <div id="pickerBackdrop" class="backdrop" hidden></div>
+  <div id="pickerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pickerTitle" hidden>
+    <div class="modal-head">
+      <h2 id="pickerTitle">Choose an NFT</h2>
+      <button class="icon-btn" id="pickerClose" aria-label="Close">✕</button>
+    </div>
+    <div id="pickerGrid" class="grid"></div>
+    <div class="modal-foot">
+      <button id="pickerCancel" class="btn-secondary">Cancel</button>
+    </div>
+  </div>
+  <!-- ============================ -->
 
   <script src="script.js"></script>
 </body>
