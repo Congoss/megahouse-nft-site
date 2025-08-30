@@ -6,16 +6,21 @@ const tiles = [
 ];
 
 /* -------------------- GRID SETTINGS -------------------- */
-const COLS=10, MAX_ROWS=60, BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90;
+const COLS = 10;
+const MAX_ROWS = 60;
+const BURY = 0.5;
+const SIDE_GAP_SLOTS = 0.5;
+const TOP_SAFE = 90;
+const EXTRA_TOP_ROWS = 2; // буфер зверху, щоб не впиратись
 
 /* DOM */
-const scene=document.getElementById('scene');
-const slots=document.getElementById('slots');
-const placed=document.getElementById('placed');
+const scene  = document.getElementById('scene');
+const slots  = document.getElementById('slots');
+const placed = document.getElementById('placed');
 
 /* OCCUPANCY */
-const occ=new Map(); // key "x,y" -> {type:'tile'|'scaffold', data:{}}
-const key=(x,y)=>`${x},${y}`;
+const occ = new Map(); // key "x,y" -> {type:'tile'|'scaffold', data:{}}
+const key = (x,y)=>`${x},${y}`;
 
 /* -------------------- FARM (demo) -------------------- */
 let farmPool=0, farmTarget=20, tickRate=0.04, farmTimer=null;
@@ -28,7 +33,7 @@ const chipsWrap=document.getElementById('farmChips');
 function renderFarmBar(){
   farmAmountEl.textContent = `${farmPool.toFixed(2)} N`;
   const pct=Math.min(100, Math.round((farmPool/farmTarget)*100));
-  farmInEl.style.height = pct + "%";       // VERTICAL!
+  farmInEl.style.height = pct + "%";       // VERTICAL
   claimBtn.disabled = pct < 100;
   chipsWrap.innerHTML = `
     <span class="chip">Rarity +10%</span>
@@ -51,33 +56,35 @@ function startFarm(){
 
 /* -------------------- GEOMETRY -------------------- */
 function slotSize(){
-  const usableCols=COLS+SIDE_GAP_SLOTS*2;
-  const w=Math.floor(scene.clientWidth/usableCols);
-  const h=Math.round(w*3/4);
+  const usableCols = COLS + SIDE_GAP_SLOTS*2;
+  const w = Math.floor(scene.clientWidth/usableCols);
+  const h = Math.round(w*3/4);
   scene.style.setProperty("--slot-w",w+"px");
   scene.style.setProperty("--slot-h",h+"px");
   return {w,h};
 }
 function getMaxY(){
   let m=0;
-  for(const k of occ.keys()){ const gy=+k.split(",")[1]; if(gy>m) m=gy; }
+  for(const k of occ.keys()){
+    const gy=+k.split(",")[1];
+    if(gy>m) m=gy;
+  }
   return m;
 }
 function ensureSceneHeight(prevH=null){
   const {h}=slotSize();
-  const groundRatio=0.22;               // must match CSS
-  const denom=(1-groundRatio);          // 0.78
+  const groundRatio=0.22; // має збігатися з CSS
+  const denom=(1-groundRatio); // 0.78
   const maxY=getMaxY();
-  const needH=Math.ceil((TOP_SAFE + h*(1 - BURY + maxY)) / (denom>0?denom:0.78));
+
+  // додаємо EXTRA_TOP_ROWS як запас зверху
+  const needH=Math.ceil((TOP_SAFE + h*(1 - BURY + maxY + EXTRA_TOP_ROWS)) / (denom>0?denom:0.78));
   const newH=Math.max(window.innerHeight, needH);
   const before= prevH ?? scene.clientHeight;
   scene.style.minHeight = newH+"px";
 
-  // плавне підкручування скролу на дельту висоти (ростемо ВГОРУ)
-  const delta=newH - before;
-  if(delta>0){
-    window.scrollBy({ top: delta*0.92, behavior:'smooth' });
-  }
+  // тут БІЛЬШЕ не скролимо на "дельту висоти":
+  // скрол до конкретної плитки робимо у placeTile()
 }
 function cellToPx(x,y,w,h){
   const sceneH=scene.clientHeight;
@@ -109,6 +116,7 @@ function renderSlots(){
       slots.appendChild(s);
     }
   }
+
   // перелайаут існуючих
   Array.from(placed.children).forEach(el=>{
     const gx=+el.dataset.x, gy=+el.dataset.y;
@@ -144,9 +152,16 @@ function placeTile(x,y,tile){
   placed.appendChild(wrap);
   occ.set(key(x,y), {type:tile.type||"tile", data:tile});
 
+  // оновлюємо сітку і висоту з буфером
   renderSlots();
-  ensureSceneHeight(prevH); // обчислити дельту і плавно підскролити вгору
+  ensureSceneHeight(prevH);
+
+  // скролимо плавно САМЕ ДО цієї плитки
+  requestAnimationFrame(()=>{
+    wrap.scrollIntoView({ behavior:'smooth', block:'center' });
+  });
 }
+
 function unstake(x,y,wrap){
   const scaffold={id:`scaff-${x}-${y}`, title:"Scaffold", owner:"system", src:"img/scaffold.png", type:"scaffold"};
   wrap.innerHTML=`<img class="tile-img" src="${scaffold.src}" alt="Scaffold"><div class="tile-badge">Scaffold</div>`;
@@ -203,7 +218,7 @@ function openInfo(tile,x,y,wrap){
   infoRarity.textContent=tile.rarity||"Common";
   infoNumber.textContent=tile.number||"#0000";
 
-  // демо-значення
+  // демо
   baseRateE.textContent="1.00";
   rarityBonusE.textContent="+10%";
   neighborsBonusE.textContent="+0%";
@@ -235,10 +250,7 @@ window.addEventListener('keydown', e=>{
 });
 
 /* -------------------- INIT -------------------- */
-function renderAll(){
-  renderSlots();
-  ensureSceneHeight();
-}
+function renderAll(){ renderSlots(); ensureSceneHeight(); }
 window.addEventListener('resize', renderAll);
 renderAll();
 startFarm();
