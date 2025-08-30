@@ -1,41 +1,43 @@
-/* -------------------- DEMO DATA -------------------- */
+/* -------------------- DEMО NFT -------------------- */
 const tiles = [
   {id:"bar-001", title:"Bar Container", owner:"demo.near", src:"img/bar.png", rarity:"Rare", number:"#0042"},
   {id:"aquarium-001", title:"Aquarium", owner:"demo.near", src:"img/aquarium.png", rarity:"Epic", number:"#1177"},
   {id:"tv-001", title:"TV Room", owner:"demo.near", src:"img/tv.png", rarity:"Uncommon", number:"#0890"}
 ];
 
-/* -------------------- GRID SETTINGS -------------------- */
-const COLS = 10;
-const MAX_ROWS = 60;
-const BURY = 0.5;
-const SIDE_GAP_SLOTS = 0.5;
-const TOP_SAFE = 90;
-const EXTRA_TOP_ROWS = 2; // буфер зверху, щоб не впиратись
+/* -------------------- GRID -------------------- */
+const COLS=10, MAX_ROWS=60;
+const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90;
+const EXTRA_TOP_ROWS=2;         // буфер над дахом
+const GROUND_FUDGE= parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-fudge')) || 8;
 
 /* DOM */
-const scene  = document.getElementById('scene');
-const slots  = document.getElementById('slots');
-const placed = document.getElementById('placed');
+const scene=document.getElementById('scene');
+const slots=document.getElementById('slots');
+const placed=document.getElementById('placed');
 
-/* OCCUPANCY */
-const occ = new Map(); // key "x,y" -> {type:'tile'|'scaffold', data:{}}
-const key = (x,y)=>`${x},${y}`;
+/* OCC */
+const occ=new Map();
+const key=(x,y)=>`${x},${y}`;
 
 /* -------------------- FARM (demo) -------------------- */
 let farmPool=0, farmTarget=20, tickRate=0.04, farmTimer=null;
 
-const farmAmountEl=document.getElementById('farmAmount');
-const farmInEl=document.getElementById('farmProgress');
+const farmEl=document.getElementById('farm');
+const farmFill=document.getElementById('farmFill');
+const farmAmount=document.getElementById('farmAmount');
+const farmChips=document.getElementById('farmChips');
 const claimBtn=document.getElementById('btnClaim');
-const chipsWrap=document.getElementById('farmChips');
+const farmToggle=document.getElementById('farmToggle');
 
-function renderFarmBar(){
-  farmAmountEl.textContent = `${farmPool.toFixed(2)} N`;
+farmToggle.addEventListener('click',()=> farmEl.classList.toggle('open'));
+
+function renderFarm(){
+  farmAmount.textContent = `${farmPool.toFixed(2)} N`;
   const pct=Math.min(100, Math.round((farmPool/farmTarget)*100));
-  farmInEl.style.height = pct + "%";       // VERTICAL
+  farmFill.style.height = pct + "%";
   claimBtn.disabled = pct < 100;
-  chipsWrap.innerHTML = `
+  farmChips.innerHTML = `
     <span class="chip">Rarity +10%</span>
     <span class="chip">Neighbors +0%</span>
     <span class="chip">Floor +4%</span>
@@ -46,58 +48,60 @@ claimBtn.addEventListener('click', ()=>{
   if(farmPool>=farmTarget){
     alert(`Claimed ${farmTarget} N (demo)`);
     farmPool-=farmTarget;
-    renderFarmBar();
+    renderFarm();
   }
 });
 function startFarm(){
   if(farmTimer) clearInterval(farmTimer);
-  farmTimer=setInterval(()=>{ farmPool+=tickRate; renderFarmBar(); },1000);
+  farmTimer=setInterval(()=>{ farmPool+=tickRate; renderFarm(); },1000);
 }
+
+/* -------------------- WALLET DEMO -------------------- */
+const nearValue=document.getElementById('nearValue');
+const nValue=document.getElementById('nValue');
+let near=0.0, nTok=0.0;
+setInterval(()=>{
+  near+=0.001; nTok+=0.01;
+  nearValue.textContent=near.toFixed(3);
+  nValue.textContent=nTok.toFixed(2);
+}, 1500);
 
 /* -------------------- GEOMETRY -------------------- */
 function slotSize(){
-  const usableCols = COLS + SIDE_GAP_SLOTS*2;
-  const w = Math.floor(scene.clientWidth/usableCols);
-  const h = Math.round(w*3/4);
+  const usableCols=COLS+SIDE_GAP_SLOTS*2;
+  const w=Math.floor(scene.clientWidth/usableCols);
+  const h=Math.round(w*3/4);
   scene.style.setProperty("--slot-w",w+"px");
   scene.style.setProperty("--slot-h",h+"px");
   return {w,h};
 }
 function getMaxY(){
   let m=0;
-  for(const k of occ.keys()){
-    const gy=+k.split(",")[1];
-    if(gy>m) m=gy;
-  }
+  for(const k of occ.keys()){ const gy=+k.split(",")[1]; if(gy>m) m=gy; }
   return m;
 }
 function ensureSceneHeight(prevH=null){
   const {h}=slotSize();
-  const groundRatio=0.22; // має збігатися з CSS
-  const denom=(1-groundRatio); // 0.78
+  const groundRatio=0.22;
+  const denom=1-groundRatio; // 0.78
   const maxY=getMaxY();
 
-  // додаємо EXTRA_TOP_ROWS як запас зверху
   const needH=Math.ceil((TOP_SAFE + h*(1 - BURY + maxY + EXTRA_TOP_ROWS)) / (denom>0?denom:0.78));
   const newH=Math.max(window.innerHeight, needH);
-  const before= prevH ?? scene.clientHeight;
   scene.style.minHeight = newH+"px";
-
-  // тут БІЛЬШЕ не скролимо на "дельту висоти":
-  // скрол до конкретної плитки робимо у placeTile()
 }
 function cellToPx(x,y,w,h){
+  // groundY відносно поточної висоти сцени
   const sceneH=scene.clientHeight;
   const groundY=sceneH*(1-0.22);
-  const top0=groundY - h*(1-BURY);
+  const top0=groundY - h*(1-BURY) + GROUND_FUDGE;
   const totalW=(COLS + SIDE_GAP_SLOTS*2)*w;
   const left0=(scene.clientWidth - totalW)/2 + SIDE_GAP_SLOTS*w;
   return {left:left0 + x*w, top: top0 - y*h};
 }
 function available(x,y){
   if(occ.has(key(x,y))) return false;
-  if(y===0) return true;
-  return occ.has(key(x,y-1)); // опора знизу
+  return y===0 || occ.has(key(x,y-1));
 }
 
 /* -------------------- RENDER -------------------- */
@@ -116,8 +120,6 @@ function renderSlots(){
       slots.appendChild(s);
     }
   }
-
-  // перелайаут існуючих
   Array.from(placed.children).forEach(el=>{
     const gx=+el.dataset.x, gy=+el.dataset.y;
     if(Number.isFinite(gx) && Number.isFinite(gy)){
@@ -130,8 +132,6 @@ function renderSlots(){
 
 /* -------------------- PLACE / UNSTAKE -------------------- */
 function placeTile(x,y,tile){
-  const prevH = scene.clientHeight;
-
   const {w,h}=slotSize();
   const {left,top}=cellToPx(x,y,w,h);
 
@@ -152,11 +152,9 @@ function placeTile(x,y,tile){
   placed.appendChild(wrap);
   occ.set(key(x,y), {type:tile.type||"tile", data:tile});
 
-  // оновлюємо сітку і висоту з буфером
   renderSlots();
-  ensureSceneHeight(prevH);
+  ensureSceneHeight();
 
-  // скролимо плавно САМЕ ДО цієї плитки
   requestAnimationFrame(()=>{
     wrap.scrollIntoView({ behavior:'smooth', block:'center' });
   });
@@ -218,7 +216,6 @@ function openInfo(tile,x,y,wrap){
   infoRarity.textContent=tile.rarity||"Common";
   infoNumber.textContent=tile.number||"#0000";
 
-  // демо
   baseRateE.textContent="1.00";
   rarityBonusE.textContent="+10%";
   neighborsBonusE.textContent="+0%";
@@ -226,15 +223,13 @@ function openInfo(tile,x,y,wrap){
 
   btnUnstake.onclick=()=>{
     if(confirm("Unstake? Поставимо будівельні ліси.")){
-      unstake(x,y,wrap);
-      closeModal(infoModal);
+      unstake(x,y,wrap); closeModal(infoModal);
     }
   };
-
   openModal(infoModal);
 }
 
-/* -------------------- MODAL helpers -------------------- */
+/* -------------------- MODALS -------------------- */
 function openModal(n){ n.setAttribute("aria-hidden","false"); }
 function closeModal(n){ n.setAttribute("aria-hidden","true"); }
 document.querySelectorAll('[data-close]').forEach(btn=>{
