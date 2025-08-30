@@ -1,44 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Megahouse — modular apartments</title>
+  <title>MEGAHOUSE</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <!-- Верхня панель -->
-  <div class="top-ui">
-    <div class="logo">MEGAHOUSE</div>
-    <button id="connect">Connect Wallet</button>
-  </div>
 
-  <!-- Сцена -->
+  <!-- Топ-панель (лого + іконки + Connect) -->
+  <header class="top-ui">
+    <div class="logo">MEGAHOUSE</div>
+    <div class="top-right">
+      <button class="icon-btn" id="btn-checkin" title="Щоденний чекін">✅</button>
+      <button class="icon-btn" id="btn-achievements" title="Ачівки">🏆</button>
+      <button class="icon-btn" id="btn-profile" title="Кабінет / гаманець">👤</button>
+      <button class="connect-btn" id="connect">Connect Wallet</button>
+    </div>
+  </header>
+
+  <!-- Сцена з фоном та шарами -->
   <main id="scene">
     <div id="slots"></div>
     <div id="placed"></div>
   </main>
 
-  <!-- Фарм шкала -->
-  <div class="farm-bar">
-    <div class="farm-label">Farm progress:</div>
-    <div class="farm-progress"><div id="farm-fill"></div></div>
-    <div class="farm-value" id="farm-value">0 N</div>
+  <!-- Farm bar (низ праворуч) -->
+  <aside class="farm-bar" id="farmBar">
+    <div class="farm-bar__row">
+      <div class="farm-bar__label">Farm progress</div>
+      <div class="farm-bar__value"><span id="farmAmount">0</span> N</div>
+    </div>
+    <div class="farm-bar__progress">
+      <div class="farm-bar__progress-in" id="farmProgress"></div>
+    </div>
+    <div class="farm-bar__chips" id="farmChips">
+      <!-- чіпси підставляються з JS -->
+    </div>
+    <div class="farm-bar__cta">
+      <button id="btnClaim" class="claim-btn" disabled>Claim</button>
+    </div>
+  </aside>
+
+  <!-- Модал: вибір NFT при натисканні на "+" -->
+  <div class="modal" id="pickerModal" aria-hidden="true">
+    <div class="modal__dialog small">
+      <button class="modal__close" data-close>×</button>
+      <h3 class="modal__title">Вибір NFT</h3>
+      <div class="picker-grid" id="pickerGrid"><!-- генерується JS --></div>
+    </div>
   </div>
 
-  <!-- Popup інфо -->
-  <div id="infoBox" class="info-box hidden">
-    <div class="info-content">
-      <span id="infoClose" class="close-btn">✖</span>
-      <h2 id="infoTitle"></h2>
-      <p id="infoOwner"></p>
-      <div class="info-actions">
-        <button id="unstakeBtn">Unstake</button>
-        <button id="farmBtn">Farm Info</button>
+  <!-- Модал: інформація про контейнер -->
+  <div class="modal" id="infoModal" aria-hidden="true">
+    <div class="modal__dialog">
+      <button class="modal__close" data-close>×</button>
+      <div class="info-box">
+        <div class="info-box__preview">
+          <img id="infoImg" alt="preview"/>
+          <div class="info-rarity" id="infoRarity">Rare</div>
+          <div class="info-number" id="infoNumber">#0001</div>
+        </div>
+        <div class="info-box__meta">
+          <h3 id="infoTitle">Bar Container</h3>
+          <div class="kv"><span>Owner</span><b id="infoOwner">demo.near</b></div>
+          <div class="kv"><span>Token ID</span><b id="infoToken">bar-001</b></div>
+          <div class="kv"><span>Coords</span><b id="infoCoords">4,0</b></div>
+
+          <div class="subt">Фарм</div>
+          <ul class="bullet">
+            <li>Base: <b id="baseRate">1.00</b> N/hr</li>
+            <li>Rarity bonus: <b id="rarityBonus">+0%</b></li>
+            <li>Neighbors: <b id="neighborsBonus">+0%</b></li>
+            <li>Floor: <b id="floorBonus">+0%</b></li>
+          </ul>
+
+          <div class="info-actions">
+            <button id="btnUnstake" class="danger">Unstake</button>
+            <button id="btnDecorate">Decorate</button>
+            <button id="btnMarket">Market (stub)</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <footer class="footer">© Megahouse demo</footer>
   <script src="script.js"></script>
 </body>
 </html>
