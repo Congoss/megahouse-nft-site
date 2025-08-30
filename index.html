@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- Топ-панель (лого + іконки + Connect) -->
+  <!-- Топ-панель (прозора) -->
   <header class="top-ui">
     <div class="logo">MEGAHOUSE</div>
     <div class="top-right">
@@ -19,39 +19,33 @@
     </div>
   </header>
 
-  <!-- Сцена з фоном та шарами -->
+  <!-- Сцена -->
   <main id="scene">
     <div id="slots"></div>
     <div id="placed"></div>
   </main>
 
-  <!-- Farm bar (низ праворуч) -->
+  <!-- Farm bar (VERTICAL) -->
   <aside class="farm-bar" id="farmBar">
-    <div class="farm-bar__row">
-      <div class="farm-bar__label">Farm progress</div>
-      <div class="farm-bar__value"><span id="farmAmount">0</span> N</div>
-    </div>
-    <div class="farm-bar__progress">
+    <div class="farm-bar__label">Farm</div>
+    <div class="farm-bar__progress" id="farmTrack">
       <div class="farm-bar__progress-in" id="farmProgress"></div>
     </div>
-    <div class="farm-bar__chips" id="farmChips">
-      <!-- чіпси підставляються з JS -->
-    </div>
-    <div class="farm-bar__cta">
-      <button id="btnClaim" class="claim-btn" disabled>Claim</button>
-    </div>
+    <div class="farm-bar__value" id="farmAmount">0 N</div>
+    <div class="farm-bar__chips" id="farmChips"></div>
+    <button id="btnClaim" class="claim-btn" disabled>Claim</button>
   </aside>
 
-  <!-- Модал: вибір NFT при натисканні на "+" -->
+  <!-- Пікер NFT -->
   <div class="modal" id="pickerModal" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
       <h3 class="modal__title">Вибір NFT</h3>
-      <div class="picker-grid" id="pickerGrid"><!-- генерується JS --></div>
+      <div class="picker-grid" id="pickerGrid"></div>
     </div>
   </div>
 
-  <!-- Модал: інформація про контейнер -->
+  <!-- Інфо-модал -->
   <div class="modal" id="infoModal" aria-hidden="true">
     <div class="modal__dialog">
       <button class="modal__close" data-close>×</button>
@@ -85,7 +79,7 @@
     </div>
   </div>
 
-  <footer class="footer">© Megahouse demo</footer>
+  <!-- без футера, щоб не створював “низ” -->
   <script src="script.js"></script>
 </body>
 </html>
