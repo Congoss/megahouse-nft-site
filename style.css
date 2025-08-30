@@ -1,9 +1,32 @@
 :root{
+  /* палітра — можеш підставити свої значення */
+  --bg:#0b0d10;
+  --text:#eaeef2;
+  --muted:#c9d1d9;
+  --accent:#00ffd0;
+  --accent-2:#00c3ff;
+
+  /* тепла гама для карток зверху */
+  --card-bg:#2a2f36;
+  --card-stroke:rgba(255,255,255,.12);
+  --card-shadow:rgba(0,0,0,.35);
+  --card-gold:#f7c66b;      /* NEAR таб */
+  --card-peach:#ff9d6e;     /* N таб */
+
+  /* farm */
+  --farm-bg:rgba(0,0,0,.55);
+  --farm-stroke:rgba(255,255,255,.08);
+  --farm-chip:rgba(255,255,255,.10);
+
+  /* сцена */
   --slot-w:400px;
   --slot-h:300px;
   --side-gap-slots:0.5;
   --top-safe:90px;
   --ground-ratio:0.22;
+
+  /* крихітний “фадж”, щоб y=0 виглядав прямо в землі */
+  --ground-fudge: 8px;
 }
 
 /* RESET */
@@ -12,21 +35,20 @@ html,body{height:100%}
 body{
   margin:0;
   font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-  background:#0b0d10;
-  color:#eaeef2;
+  background:var(--bg);
+  color:var(--text);
   overflow-x:hidden;
 }
 
-/* TOP UI (прозорий) */
+/* TOP UI */
 .top-ui{
   position:fixed; inset:0 0 auto 0; height:56px;
   display:flex; align-items:center; justify-content:space-between;
-  padding:10px 16px; z-index:1000;
-  background:transparent;
-  backdrop-filter:none;
-  border-bottom:none;
+  padding:10px 12px; z-index:1000;
+  background:transparent; border-bottom:none;
 }
-.logo{font-weight:800; letter-spacing:.6px; text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.logo{font-weight:900; letter-spacing:.8px; text-shadow:0 1px 0 rgba(0,0,0,.25)}
+
 .top-right{display:flex; gap:10px; align-items:center}
 .icon-btn{
   width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.15);
@@ -36,6 +58,21 @@ body{
   background:linear-gradient(90deg,#ffaf00,#ff7a00);
   color:#1a0a00; border:none; border-radius:12px; padding:8px 14px; font-weight:800; cursor:pointer;
 }
+
+/* WALLET CARDS (угорі, як у прикладі) */
+.wallet-cards{ display:flex; gap:8px; }
+.wallet-card{
+  height:36px; min-width:170px; display:flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:12px; border:1px solid var(--card-stroke);
+  background:var(--card-bg); color:var(--text); box-shadow:0 4px 10px var(--card-shadow);
+}
+#wcard-near{}
+#wcard-n{}
+.wc-icon{ width:26px; height:26px; display:grid; place-items:center; color:var(--card-gold); }
+.wc-icon.wc-n{ color:var(--card-peach); }
+.wc-text{ display:flex; flex-direction:column; line-height:1.1 }
+.wc-label{ font-size:11px; opacity:.75 }
+.wc-value{ font-weight:900 }
 
 /* SCENE */
 #scene{
@@ -79,34 +116,50 @@ body{
   background:rgba(0,0,0,.55); color:#fff; font-size:12px; border-radius:8px;
 }
 
-/* VERTICAL FARM BAR (праворуч по центру) */
-.farm-bar{
-  position:fixed; right:14px; top:50%; transform:translateY(-50%);
-  width:86px; height:62vh; min-height:420px;
-  z-index:1001;
-  background:rgba(0,0,0,.65);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:16px; padding:10px;
-  display:flex; flex-direction:column; align-items:center; gap:10px;
-  backdrop-filter:blur(6px);
+/* COMPACT FARM */
+.farm{
+  position:fixed; top:50%; transform:translateY(-50%);
+  right:10px; z-index:1001;
+  width:56px; /* компакт */
+  padding:10px 8px;
+  background:var(--farm-bg); border:1px solid var(--farm-stroke);
+  border-radius:16px; backdrop-filter:blur(6px);
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  transition:width .18s ease, padding .18s ease;
 }
-.farm-bar__label{font-weight:800; opacity:.9}
-.farm-bar__progress{
-  flex:1 1 auto; width:12px; background:rgba(255,255,255,.12);
+.farm:hover, .farm.open{ width:136px; padding:12px; }
+
+.farm-toggle{
+  position:absolute; left:-14px; top:50%; transform:translateY(-50%);
+  width:10px; height:36px; border-radius:8px 0 0 8px; border:none; cursor:pointer;
+  background:linear-gradient(180deg,var(--accent),var(--accent-2));
+  box-shadow:0 0 0 2px rgba(0,0,0,.25);
+}
+
+/* заголовок */
+.farm-head{ font-weight:900; opacity:.9; align-self:flex-start }
+
+/* прогрес вертикальний */
+.farm-track{
+  width:12px; flex:1 1 auto; background:rgba(255,255,255,.12);
   border-radius:999px; overflow:hidden; position:relative;
 }
-.farm-bar__progress-in{
+.farm-fill{
   position:absolute; left:0; bottom:0; width:100%; height:0%;
-  background:linear-gradient(180deg,#00ffd0,#00c3ff);
+  background:linear-gradient(180deg,var(--accent),var(--accent-2));
   transition:height .3s ease;
 }
-.farm-bar__value{font-weight:800}
-.farm-bar__chips{display:flex; flex-direction:column; gap:6px; width:100%}
-.chip{font-size:10px; padding:3px 6px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); text-align:center}
-.claim-btn{width:100%; padding:8px 10px; border-radius:10px; border:none; color:#051015; font-weight:800; background:#00ffd0; cursor:pointer}
-.claim-btn:disabled{opacity:.45; cursor:not-allowed}
 
-/* MODALS */
+.farm-amount{ font-weight:900; align-self:flex-start }
+.farm-chips{ display:none; gap:6px; flex-direction:column; width:100% }
+.farm:hover .farm-chips, .farm.open .farm-chips{ display:flex; }
+.chip{ font-size:10px; padding:3px 6px; border-radius:999px; background:var(--farm-chip); border:1px solid var(--farm-stroke); text-align:center }
+.claim-btn{
+  width:100%; padding:8px 10px; border-radius:10px; border:none; color:#051015; font-weight:800; background:var(--accent); cursor:pointer
+}
+.claim-btn:disabled{ opacity:.45; cursor:not-allowed }
+
+/* MODALS (без змін) */
 .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:2000; }
 .modal[aria-hidden="false"]{ display:flex; }
 .modal::before{ content:""; position:absolute; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); }
@@ -117,8 +170,6 @@ body{
 .modal__dialog.small{ width:min(620px,92vw); }
 .modal__close{ position:absolute; right:10px; top:8px; border:none; background:transparent; color:#fff; font-size:22px; cursor:pointer }
 .modal__title{ margin:0 0 10px; }
-
-/* INFO BOX */
 .info-box{ display:grid; grid-template-columns:280px 1fr; gap:14px; }
 .info-box__preview{ position:relative; }
 .info-box__preview img{ width:100%; border-radius:12px; display:block; }
@@ -141,4 +192,4 @@ body{
 .picker-card img{ width:100%; aspect-ratio:4/3; object-fit:cover; display:block }
 .picker-card .meta{ padding:8px; display:flex; align-items:center; justify-content:space-between; gap:6px }
 .picker-card .title{ font-size:13px; font-weight:700 }
-.picker-card button{ border:none; background:#00ffd0; color:#041218; font-weight:800; border-radius:10px; padding:6px 8px; cursor:pointer }
+.picker-card button{ border:none; background:var(--accent); color:#041218; font-weight:800; border-radius:10px; padding:6px 8px; cursor:pointer }
