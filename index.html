@@ -8,15 +8,12 @@
 </head>
 <body>
 
-  <!-- Топ-бар (прозорий) -->
   <header class="top-ui">
     <div class="logo">MEGAHOUSE</div>
 
-    <!-- Два інформаційні бокси (NEAR / N) -->
     <div class="wallet-cards">
       <div class="wallet-card" id="card-near" title="NEAR balance">
         <div class="wc-icon">
-          <!-- coin svg -->
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
             <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -31,7 +28,6 @@
 
       <div class="wallet-card" id="card-n" title="N-token balance">
         <div class="wc-icon wc-n">
-          <!-- N token svg -->
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
             <path d="M7 16V8l10 8V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -52,32 +48,20 @@
     </div>
   </header>
 
-  <!-- Сцена -->
   <main id="scene">
     <div id="slots"></div>
     <div id="placed"></div>
   </main>
 
-  <!-- Компактний Farm-бар -->
   <aside class="farm dock-right" id="farm">
     <button class="farm-toggle" id="farmToggle" aria-label="Toggle farm panel"></button>
-
     <div class="farm-head">Farm</div>
-
-    <div class="farm-track" id="farmTrack">
-      <div class="farm-fill" id="farmFill"></div>
-    </div>
-
+    <div class="farm-track" id="farmTrack"><div class="farm-fill" id="farmFill"></div></div>
     <div class="farm-amount" id="farmAmount">0 N</div>
-
-    <div class="farm-chips" id="farmChips">
-      <!-- додаються скриптом -->
-    </div>
-
+    <div class="farm-chips" id="farmChips"></div>
     <button class="claim-btn" id="btnClaim" disabled>Claim</button>
   </aside>
 
-  <!-- Пікер NFT -->
   <div class="modal" id="pickerModal" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
@@ -86,7 +70,6 @@
     </div>
   </div>
 
-  <!-- Інфо-модал -->
   <div class="modal" id="infoModal" aria-hidden="true">
     <div class="modal__dialog">
       <button class="modal__close" data-close>×</button>
