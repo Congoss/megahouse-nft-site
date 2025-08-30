@@ -8,9 +8,9 @@ const tiles = [
 /* Сітка */
 const COLS = 10;            // 10 на поверх
 const ROWS = 60;            // до 60 поверхів
-const GROUND_RATIO = 0.22;  // де “земля”
+const GROUND_RATIO = 0.22;  // земля
 const BURY = 0.5;           // наскільки перший ряд вкопаний
-const SIDE_GAP_SLOTS = 0.5; // відступи зліва/справа у розмірі пів-слота
+const SIDE_GAP_SLOTS = 0.5; // відступ зліва/справа у слотах
 
 /* DOM */
 const scene  = document.getElementById('scene');
@@ -27,9 +27,8 @@ function chooseTile(){
   return tiles[pick-1];
 }
 
-/* Розміри “слота” з урахуванням кількості колонок */
+/* Розміри слота */
 function slotSize(){
-  // ширина слота — з урахуванням бічних відступів у слотах
   const usableCols = COLS + SIDE_GAP_SLOTS*2;
   let w = Math.floor(scene.clientWidth / usableCols);
   let h = Math.round(w * 3/4);
@@ -38,12 +37,11 @@ function slotSize(){
   return {w,h};
 }
 
-/* Переведення координат сітки в px */
+/* Координати px */
 function cellToPx(x, y, w, h){
   const groundY = scene.clientHeight * (1 - GROUND_RATIO);
   const top0    = groundY - h*(1 - BURY);
 
-  // центруємо все полотно і додаємо бокові “щілини”
   const totalW  = (COLS + SIDE_GAP_SLOTS*2) * w;
   const left0   = (scene.clientWidth - totalW) / 2 + SIDE_GAP_SLOTS*w;
 
@@ -53,10 +51,13 @@ function cellToPx(x, y, w, h){
 /* Чи доступна клітинка */
 function available(x, y){
   if (occ.has(`${x},${y}`)) return false;
-  return y === 0 || occ.has(`${x},${y-1}`);
+  // дозволяємо перший ряд завжди
+  if (y === 0) return true;
+  // вище — тільки якщо під ним є контейнер
+  return occ.has(`${x},${y-1}`);
 }
 
-/* Рендер доступних слотів (плюсів) */
+/* Рендер слотів */
 function renderSlots(){
   slots.innerHTML = "";
   const {w,h} = slotSize();
@@ -74,7 +75,7 @@ function renderSlots(){
     }
   }
 
-  // Перелайаут уже розміщених плиток після ресайзу
+  // пересунути існуючі плитки
   Array.from(placed.children).forEach(el=>{
     const gx = +el.dataset.x;
     const gy = +el.dataset.y;
@@ -101,7 +102,7 @@ function place(x,y){
   wrap.style.top    = top  + "px";
   wrap.style.width  = w + "px";
   wrap.style.height = h + "px";
-  wrap.dataset.x = x;  // для перелайаута
+  wrap.dataset.x = x;
   wrap.dataset.y = y;
 
   wrap.innerHTML = `
@@ -109,9 +110,22 @@ function place(x,y){
     <div class="tile-badge">${t.title}</div>
   `;
 
+  // клік по контейнеру → показати інфо
+  wrap.onclick = () => showTileInfo(t, x, y);
+
   placed.appendChild(wrap);
   occ.add(`${x},${y}`);
   renderSlots();
+}
+
+/* Інфо по контейнеру */
+function showTileInfo(tile, x, y){
+  alert(
+    `Container: ${tile.title}\n`+
+    `Owner: ${tile.owner}\n`+
+    `Coords: ${x},${y}\n`+
+    `ID: ${tile.id}`
+  );
 }
 
 /* Події */
