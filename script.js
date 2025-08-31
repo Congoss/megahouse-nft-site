@@ -51,7 +51,7 @@ const nValue=document.getElementById('nValue');
 let near=0.011, nTok=0.11;
 setInterval(()=>{ near+=0.001; nTok+=0.01; nearValue.textContent=near.toFixed(3); nValue.textContent=nTok.toFixed(2); },1500);
 
-/* -------------------- GEOMETRY (якір на землі) -------------------- */
+/* -------------------- GEOMETRY -------------------- */
 function slotSize(){
   const usableCols=COLS + SIDE_GAP_SLOTS*2;
   const w=Math.floor(scene.clientWidth/usableCols);
@@ -64,9 +64,9 @@ function getMaxY(){ let m=0; for(const k of occ.keys()){ const gy=+k.split(",")[
 
 let lastSceneHeight=null;
 
-/* лінія землі завжди відносно viewport, а не висоти сцени */
-function groundY(){
-  return window.innerHeight * (1 - GROUND_RATIO);
+/* земля від низу сцени */
+function groundY(sceneH,h){
+  return sceneH - h*GROUND_RATIO;
 }
 
 function ensureSceneHeight(){
@@ -82,7 +82,8 @@ function ensureSceneHeight(){
 }
 
 function cellToPx(x,y,w,h){
-  const gy = groundY(); // фіксована земля
+  const sceneH = scene.clientHeight;
+  const gy = groundY(sceneH,h); // земля від низу сцени
   const baseTop = gy - h*(1-BURY) + GROUND_FUDGE;
   const totalW = (COLS + SIDE_GAP_SLOTS*2) * w;
   const left0  = (scene.clientWidth - totalW)/2 + SIDE_GAP_SLOTS*w;
@@ -141,7 +142,6 @@ function placeTile(x,y,tile){
   placed.appendChild(wrap);
   occ.set(key(x,y), {type:tile.type||"tile", data:tile});
 
-  /* Порядок важливий: спершу малюємо, потім гарантуємо висоту й оновлюємо позиції */
   renderSlots();
   ensureSceneHeight();
   renderSlots();
@@ -208,6 +208,6 @@ window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.querySelec
 /* -------------------- INIT -------------------- */
 function renderAll(){ renderSlots(); ensureSceneHeight(); renderSlots(); }
 window.addEventListener('resize', ()=>{
-  renderAll(); // завжди перераховуємо з фіксованою землею
+  renderAll();
 });
 renderAll(); startFarm(); renderFarm();
