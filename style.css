@@ -1,16 +1,16 @@
 :root{
   --bg:#0b0d10; --text:#eaeef2; --muted:#c9d1d9;
-  --accent:#00ffd0; --accent-2:#00c3ff;
 
-  --card-bg:#2a2f36; --card-stroke:rgba(255,255,255,.12);
-  --card-shadow:rgba(0,0,0,.35); --card-gold:#f7c66b; --card-peach:#ff9d6e;
+  /* твої кольори */
+  --near-pill:#FFD180;
+  --n-pill:#FFB47F;
+  --farm-fill:#546A63;
 
-  --farm-bg:rgba(0,0,0,.55); --farm-stroke:rgba(255,255,255,.08);
-  --farm-chip:rgba(255,255,255,.10);
+  --card-stroke:rgba(0,0,0,.25);
+  --pill-shadow:0 6px 14px rgba(0,0,0,.28);
 
   --slot-w:400px; --slot-h:300px; --side-gap-slots:0.5;
-  --top-safe:90px; --ground-ratio:0.22;
-  --ground-fudge:8px;
+  --top-safe:90px; --ground-ratio:0.22; --ground-fudge:8px;
 }
 
 *{box-sizing:border-box}
@@ -18,23 +18,64 @@ html,body{height:100%}
 body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
 
 /* top */
-.top-ui{position:fixed;inset:0 0 auto 0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;z-index:1000;background:transparent}
+.top-ui{
+  position:fixed;inset:0 0 auto 0;height:56px;display:flex;
+  align-items:center;justify-content:space-between;padding:10px 12px;
+  z-index:1000;background:transparent
+}
 .logo{font-weight:900;letter-spacing:.8px;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.top-center{display:flex;gap:12px;align-items:center}
 .top-right{display:flex;gap:10px;align-items:center}
-.icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:16px}
-.connect-btn{background:linear-gradient(90deg,#ffaf00,#ff7a00);color:#1a0a00;border:none;border-radius:12px;padding:8px 14px;font-weight:800;cursor:pointer}
 
-/* wallet cards */
-.wallet-cards{display:flex;gap:8px}
-.wallet-card{height:36px;min-width:170px;display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;border:1px solid var(--card-stroke);background:var(--card-bg);color:var(--text);box-shadow:0 4px 10px var(--card-shadow)}
-.wc-icon{width:26px;height:26px;display:grid;place-items:center;color:var(--card-gold)} .wc-icon.wc-n{color:var(--card-peach)}
-.wc-text{display:flex;flex-direction:column;line-height:1.1}.wc-label{font-size:11px;opacity:.75}.wc-value{font-weight:900}
+/* пігулки */
+.wallet-cards{display:flex;gap:10px}
+.wallet-card{
+  height:36px; min-width:170px; display:flex; align-items:center; gap:8px;
+  padding:6px 12px; border-radius:999px;
+  border:2px solid var(--card-stroke); box-shadow:var(--pill-shadow);
+  color:#1a1208; background:#eee;
+}
+#card-near{ background:var(--near-pill); }
+#card-n{ background:var(--n-pill); }
+.wc-icon{width:26px;height:26px;display:grid;place-items:center;color:rgba(0,0,0,.6)}
+.wc-text{display:flex;flex-direction:column;line-height:1.05}
+.wc-label{font-size:11px;opacity:.75}
+.wc-value{font-weight:900}
+
+/* farm у верхній панелі як пігулка */
+.farm-top{
+  display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+  border:2px solid var(--card-stroke); background:rgba(0,0,0,.35);
+  backdrop-filter:blur(6px); box-shadow:var(--pill-shadow)
+}
+.farm-top__label{font-weight:800;opacity:.9}
+.farm-top__bar{width:190px;height:10px;border-radius:999px;background:rgba(255,255,255,.15);overflow:hidden;position:relative}
+.farm-top__fill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--farm-fill);transition:width .3s ease}
+.farm-top__amount{font-weight:900;min-width:64px;text-align:right}
+.farm-top__claim{
+  border:2px solid var(--card-stroke); border-radius:12px; padding:6px 12px;
+  background:var(--n-pill); color:#1a1208; font-weight:800; cursor:pointer;
+  box-shadow:var(--pill-shadow)
+}
+.farm-top__claim:disabled{opacity:.45;cursor:not-allowed}
+.farm-top__chips{display:none;position:absolute;transform:translateY(42px);background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);padding:6px;border-radius:10px;gap:6px;white-space:nowrap}
+.farm-top:hover .farm-top__chips{display:flex}
+.chip{font-size:10px;padding:3px 6px;border-radius:999px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12)}
+
+/* кнопки справа — пігулки */
+.icon-btn,.connect-btn{
+  height:34px; min-width:34px; padding:6px 12px;
+  border-radius:999px; border:2px solid var(--card-stroke);
+  background:var(--n-pill); color:#1a1208; cursor:pointer; font-weight:800;
+  box-shadow:var(--pill-shadow)
+}
+.icon-btn{width:auto}
+.connect-btn{white-space:nowrap}
 
 /* scene */
 #scene{
   position:relative;width:100%;min-height:100vh;
-  /* ВАЖЛИВО: фон доходить під хедер, чорна смуга зникає */
-  padding-top:56px;  /* було margin-top */
+  padding-top:56px; /* прибирає чорну смугу під хедером */
   background:url("img/background1.png") no-repeat center bottom;
   background-size:cover; overflow:visible;
 }
@@ -42,29 +83,25 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
 #placed{position:absolute;inset:0;z-index:3;pointer-events:none}
 
 /* slots / tiles */
-.slot{position:absolute;width:var(--slot-w);height:var(--slot-h);border:2px dashed rgba(255,255,255,.35);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;pointer-events:auto;transition:transform .06s ease,background .12s ease}
+.slot{
+  position:absolute;width:var(--slot-w);height:var(--slot-h);
+  border:2px dashed rgba(255,255,255,.35);background:rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  border-radius:12px;pointer-events:auto;transition:transform .06s ease,background .12s ease
+}
 .slot:hover{transform:translateY(-1px);background:rgba(255,255,255,.12)}
 .slot::after{content:"+";font-size:28px;color:#fff}
 
-.tile-wrap{position:absolute;width:var(--slot-w);height:var(--slot-h);border-radius:10px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.45);transition:transform .08s ease,box-shadow .12s ease;pointer-events:auto}
+.tile-wrap{
+  position:absolute;width:var(--slot-w);height:var(--slot-h);border-radius:12px;
+  overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.45);
+  transition:transform .08s ease,box-shadow .12s ease;pointer-events:auto
+}
 .tile-wrap:hover{transform:translateY(-2px)}
 .tile-img{width:100%;height:100%;object-fit:cover;display:block}
-.tile-badge{position:absolute;left:8px;bottom:6px;padding:2px 6px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;border-radius:8px}
+.tile-badge{position:absolute;left:8px;bottom:6px;padding:4px 8px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;border-radius:10px}
 
-/* compact farm */
-.farm{position:fixed;top:50%;transform:translateY(-50%);right:10px;z-index:1001;width:56px;padding:10px 8px;background:var(--farm-bg);border:1px solid var(--farm-stroke);border-radius:16px;backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;gap:8px;transition:width .18s ease,padding .18s ease}
-.farm:hover,.farm.open{width:136px;padding:12px}
-.farm-toggle{position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:10px;height:36px;border-radius:8px 0 0 8px;border:none;cursor:pointer;background:linear-gradient(180deg,var(--accent),var(--accent-2));box-shadow:0 0 0 2px rgba(0,0,0,.25)}
-.farm-head{font-weight:900;opacity:.9;align-self:flex-start}
-.farm-track{width:12px;flex:1 1 auto;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;position:relative}
-.farm-fill{position:absolute;left:0;bottom:0;width:100%;height:0%;background:linear-gradient(180deg,var(--accent),var(--accent-2));transition:height .3s ease}
-.farm-amount{font-weight:900;align-self:flex-start}
-.farm-chips{display:none;gap:6px;flex-direction:column;width:100%}.farm:hover .farm-chips,.farm.open .farm-chips{display:flex}
-.chip{font-size:10px;padding:3px 6px;border-radius:999px;background:var(--farm-chip);border:1px solid var(--farm-stroke);text-align:center}
-.claim-btn{width:100%;padding:8px 10px;border-radius:10px;border:none;color:#051015;font-weight:800;background:var(--accent);cursor:pointer}
-.claim-btn:disabled{opacity:.45;cursor:not-allowed}
-
-/* modals & picker — як раніше */
+/* modals / picker */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:2000}
 .modal[aria-hidden="false"]{display:flex}
 .modal::before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
@@ -90,4 +127,4 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
 .picker-card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
 .picker-card .meta{padding:8px;display:flex;align-items:center;justify-content:space-between;gap:6px}
 .picker-card .title{font-size:13px;font-weight:700}
-.picker-card button{border:none;background:var(--accent);color:#041218;font-weight:800;border-radius:10px;padding:6px 8px;cursor:pointer}
+.picker-card button{border:none;background:var(--n-pill);color:#1a1208;font-weight:800;border-radius:10px;padding:6px 8px;cursor:pointer}
