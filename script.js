@@ -51,7 +51,7 @@ const nValue=document.getElementById('nValue');
 let near=0.011, nTok=0.11;
 setInterval(()=>{ near+=0.001; nTok+=0.01; nearValue.textContent=near.toFixed(3); nValue.textContent=nTok.toFixed(2); },1500);
 
-/* -------------------- GEOMETRY (із “якорем”) -------------------- */
+/* -------------------- GEOMETRY (якір на землі) -------------------- */
 function slotSize(){
   const usableCols=COLS + SIDE_GAP_SLOTS*2;
   const w=Math.floor(scene.clientWidth/usableCols);
@@ -63,31 +63,25 @@ function slotSize(){
 function getMaxY(){ let m=0; for(const k of occ.keys()){ const gy=+k.split(",")[1]; if(gy>m) m=gy; } return m; }
 
 let lastSceneHeight=null;
-let anchorOffsetY=0;                 // компенсатор зміщення ground-лінії
-
 const groundY=h=> h*(1-GROUND_RATIO);
 
-function ensureSceneHeight(prevH=null){
+/* Висота сцени рахується від землі; ніяких накопичувальних компенсаторів */
+function ensureSceneHeight(){
   const {h}=slotSize();
   const maxY=getMaxY();
   const denom=(1-GROUND_RATIO) || 0.78;
 
   const needH=Math.ceil((TOP_SAFE + h*(1 - BURY + maxY + EXTRA_TOP_ROWS)) / denom);
-  const oldH = prevH ?? lastSceneHeight ?? scene.clientHeight;
   const newH = Math.max(window.innerHeight, needH);
 
-  const oldGY = groundY(oldH);
   scene.style.minHeight = newH+"px";
-  const newGY = groundY(newH);
-  anchorOffsetY += (newGY - oldGY);
-
   lastSceneHeight = newH;
 }
 
 function cellToPx(x,y,w,h){
   const sceneH = scene.clientHeight;
-  const gy = groundY(sceneH);
-  const baseTop = gy - h*(1-BURY) + GROUND_FUDGE - anchorOffsetY;
+  const gy = groundY(sceneH); // ground позиція для цього height
+  const baseTop = gy - h*(1-BURY) + GROUND_FUDGE;
   const totalW = (COLS + SIDE_GAP_SLOTS*2) * w;
   const left0  = (scene.clientWidth - totalW)/2 + SIDE_GAP_SLOTS*w;
   return { left:left0 + x*w, top: baseTop - y*h };
@@ -131,7 +125,6 @@ function renderSlots(){
 
 /* -------------------- PLACE / UNSTAKE -------------------- */
 function placeTile(x,y,tile){
-  const prevH = scene.clientHeight;
   const {w,h}=slotSize();
   const {left,top}=cellToPx(x,y,w,h);
 
@@ -146,10 +139,10 @@ function placeTile(x,y,tile){
   placed.appendChild(wrap);
   occ.set(key(x,y), {type:tile.type||"tile", data:tile});
 
-  /* важливо: спочатку малюємо, потім фіксим висоту і ПОВТОРНО перераховуємо позиції */
-  renderSlots();                // перший прохід (ще стара висота)
-  ensureSceneHeight(prevH);     // можлива зміна висоти сцени + якір
-  renderSlots();                // повторний перерахунок — земля лишається на місці
+  /* Порядок важливий: спершу малюємо, потім гарантуємо висоту й оновлюємо позиції */
+  renderSlots();
+  ensureSceneHeight();
+  renderSlots();
 
   requestAnimationFrame(()=>{ wrap.scrollIntoView({ behavior:'smooth', block:'center' }); });
 }
@@ -213,9 +206,6 @@ window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.querySelec
 /* -------------------- INIT -------------------- */
 function renderAll(){ renderSlots(); ensureSceneHeight(); renderSlots(); }
 window.addEventListener('resize', ()=>{
-  const prev=scene.clientHeight;
   renderAll();
-  ensureSceneHeight(prev);
-  renderSlots(); // повторний перерахунок після якірної компенсації
 });
 renderAll(); startFarm(); renderFarm();
