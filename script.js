@@ -21,19 +21,17 @@ const placed=document.getElementById('placed');
 const occ=new Map();
 const key=(x,y)=>`${x},${y}`;
 
-/* -------------------- FARM (demo) -------------------- */
+/* -------------------- FARM (горизонтальний у top UI) -------------------- */
 let farmPool=0, farmTarget=20, tickRate=0.04, farmTimer=null;
-const farmEl=document.getElementById('farm');
 const farmFill=document.getElementById('farmFill');
 const farmAmount=document.getElementById('farmAmount');
 const farmChips=document.getElementById('farmChips');
 const claimBtn=document.getElementById('btnClaim');
-const farmToggle=document.getElementById('farmToggle');
-farmToggle.addEventListener('click',()=> farmEl.classList.toggle('open'));
+
 function renderFarm(){
   farmAmount.textContent = `${farmPool.toFixed(2)} N`;
   const pct=Math.min(100, Math.round((farmPool/farmTarget)*100));
-  farmFill.style.height = pct + "%";
+  farmFill.style.width = pct + "%";
   claimBtn.disabled = pct < 100;
   farmChips.innerHTML = `
     <span class="chip">Rarity +10%</span>
@@ -47,13 +45,13 @@ claimBtn.addEventListener('click', ()=>{
 });
 function startFarm(){ if(farmTimer) clearInterval(farmTimer); farmTimer=setInterval(()=>{ farmPool+=tickRate; renderFarm(); },1000); }
 
-/* -------------------- WALLET DEMO -------------------- */
+/* -------------------- WALLET DEMО -------------------- */
 const nearValue=document.getElementById('nearValue');
 const nValue=document.getElementById('nValue');
 let near=0.011, nTok=0.11;
 setInterval(()=>{ near+=0.001; nTok+=0.01; nearValue.textContent=near.toFixed(3); nValue.textContent=nTok.toFixed(2); },1500);
 
-/* -------------------- GEOMETRY -------------------- */
+/* -------------------- GEOMETRY (із “якорем”) -------------------- */
 function slotSize(){
   const usableCols=COLS + SIDE_GAP_SLOTS*2;
   const w=Math.floor(scene.clientWidth/usableCols);
@@ -64,11 +62,10 @@ function slotSize(){
 }
 function getMaxY(){ let m=0; for(const k of occ.keys()){ const gy=+k.split(",")[1]; if(gy>m) m=gy; } return m; }
 
-/* Якір: компенсуємо зміщення groundY при зростанні сцени */
 let lastSceneHeight=null;
-let anchorOffsetY=0; // скільки “відняти” від розрахованого top
+let anchorOffsetY=0;                 // компенсатор зміщення ground-лінії
 
-function groundY(h){ return h*(1-GROUND_RATIO); }
+const groundY=h=> h*(1-GROUND_RATIO);
 
 function ensureSceneHeight(prevH=null){
   const {h}=slotSize();
@@ -79,18 +76,17 @@ function ensureSceneHeight(prevH=null){
   const oldH = prevH ?? lastSceneHeight ?? scene.clientHeight;
   const newH = Math.max(window.innerHeight, needH);
 
-  // оновити якір так, щоб y=0 залишався на місці
   const oldGY = groundY(oldH);
-  scene.style.minHeight = newH+"px";           // змінюємо висоту
+  scene.style.minHeight = newH+"px";
   const newGY = groundY(newH);
-  anchorOffsetY += (newGY - oldGY);            // компенсувати зсув ground
+  anchorOffsetY += (newGY - oldGY);
 
   lastSceneHeight = newH;
 }
 
 function cellToPx(x,y,w,h){
   const sceneH = scene.clientHeight;
-  const gy = groundY(sceneH);                  // актуальна ground-лінія
+  const gy = groundY(sceneH);
   const baseTop = gy - h*(1-BURY) + GROUND_FUDGE - anchorOffsetY;
   const totalW = (COLS + SIDE_GAP_SLOTS*2) * w;
   const left0  = (scene.clientWidth - totalW)/2 + SIDE_GAP_SLOTS*w;
@@ -103,6 +99,18 @@ function available(x,y){
 }
 
 /* -------------------- RENDER -------------------- */
+function positionPlaced(){
+  const {w,h}=slotSize();
+  Array.from(placed.children).forEach(el=>{
+    const gx=+el.dataset.x, gy=+el.dataset.y;
+    if(Number.isFinite(gx) && Number.isFinite(gy)){
+      const {left,top}=cellToPx(gx,gy,w,h);
+      el.style.left=left+"px"; el.style.top=top+"px";
+      el.style.width=w+"px"; el.style.height=h+"px";
+    }
+  });
+}
+
 function renderSlots(){
   slots.innerHTML="";
   const {w,h}=slotSize();
@@ -118,20 +126,12 @@ function renderSlots(){
       slots.appendChild(s);
     }
   }
-  Array.from(placed.children).forEach(el=>{
-    const gx=+el.dataset.x, gy=+el.dataset.y;
-    if(Number.isFinite(gx) && Number.isFinite(gy)){
-      const {left,top}=cellToPx(gx,gy,w,h);
-      el.style.left=left+"px"; el.style.top=top+"px";
-      el.style.width=w+"px"; el.style.height=h+"px";
-    }
-  });
+  positionPlaced();
 }
 
 /* -------------------- PLACE / UNSTAKE -------------------- */
 function placeTile(x,y,tile){
   const prevH = scene.clientHeight;
-
   const {w,h}=slotSize();
   const {left,top}=cellToPx(x,y,w,h);
 
@@ -146,8 +146,10 @@ function placeTile(x,y,tile){
   placed.appendChild(wrap);
   occ.set(key(x,y), {type:tile.type||"tile", data:tile});
 
-  renderSlots();
-  ensureSceneHeight(prevH);
+  /* важливо: спочатку малюємо, потім фіксим висоту і ПОВТОРНО перераховуємо позиції */
+  renderSlots();                // перший прохід (ще стара висота)
+  ensureSceneHeight(prevH);     // можлива зміна висоти сцени + якір
+  renderSlots();                // повторний перерахунок — земля лишається на місці
 
   requestAnimationFrame(()=>{ wrap.scrollIntoView({ behavior:'smooth', block:'center' }); });
 }
@@ -209,6 +211,11 @@ document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ i
 window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.querySelectorAll('.modal[aria-hidden="false"]').forEach(m=>closeModal(m)); }});
 
 /* -------------------- INIT -------------------- */
-function renderAll(){ renderSlots(); ensureSceneHeight(); }
-window.addEventListener('resize', ()=>{ const prev=scene.clientHeight; renderAll(); ensureSceneHeight(prev); });
-renderAll(); startFarm();
+function renderAll(){ renderSlots(); ensureSceneHeight(); renderSlots(); }
+window.addEventListener('resize', ()=>{
+  const prev=scene.clientHeight;
+  renderAll();
+  ensureSceneHeight(prev);
+  renderSlots(); // повторний перерахунок після якірної компенсації
+});
+renderAll(); startFarm(); renderFarm();
