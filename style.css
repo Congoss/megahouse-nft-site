@@ -42,20 +42,39 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
 .wc-label{font-size:11px;opacity:.75}
 .wc-value{font-weight:900}
 
-/* farm у верхній панелі як пігулка */
+/* === Farm pill (оновлено) === */
 .farm-top{
-  display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
-  border:2px solid var(--card-stroke); background:rgba(0,0,0,.35);
-  backdrop-filter:blur(6px); box-shadow:var(--pill-shadow)
+  height:36px;
+  display:flex; align-items:center; gap:8px;
+  padding:6px 12px; border-radius:999px;
+  border:2px solid var(--card-stroke);
+  background:var(--n-pill);            /* фон як у N token */
+  box-shadow:var(--pill-shadow);
 }
 .farm-top__label{font-weight:800;opacity:.9}
-.farm-top__bar{width:190px;height:10px;border-radius:999px;background:rgba(255,255,255,.15);overflow:hidden;position:relative}
-.farm-top__fill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--farm-fill);transition:width .3s ease}
-.farm-top__amount{font-weight:900;min-width:64px;text-align:right}
+.farm-top__bar{
+  width:clamp(120px, 18vw, 220px);     /* компактний бар */
+  height:10px; border-radius:999px;
+  background:rgba(0,0,0,.18);
+  overflow:hidden; position:relative;
+}
+.farm-top__fill{
+  position:absolute; inset:0 auto 0 0; width:0%;
+  background:var(--farm-fill);         /* #546A63 */
+  transition:width .3s ease;
+}
+.farm-top__amount{
+  font-weight:900; min-width:64px; text-align:right;
+  color:#111;                           /* чорний текст */
+}
 .farm-top__claim{
-  border:2px solid var(--card-stroke); border-radius:12px; padding:6px 12px;
-  background:var(--n-pill); color:#1a1208; font-weight:800; cursor:pointer;
-  box-shadow:var(--pill-shadow)
+  border:2px solid var(--card-stroke);
+  border-radius:999px;
+  padding:6px 12px;
+  background:var(--near-pill);          /* як NEAR */
+  color:#1a1208;
+  font-weight:800; cursor:pointer;
+  box-shadow:var(--pill-shadow);
 }
 .farm-top__claim:disabled{opacity:.45;cursor:not-allowed}
 .farm-top__chips{display:none;position:absolute;transform:translateY(42px);background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);padding:6px;border-radius:10px;gap:6px;white-space:nowrap}
