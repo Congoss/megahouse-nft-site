@@ -63,9 +63,12 @@ function slotSize(){
 function getMaxY(){ let m=0; for(const k of occ.keys()){ const gy=+k.split(",")[1]; if(gy>m) m=gy; } return m; }
 
 let lastSceneHeight=null;
-const groundY=h=> h*(1-GROUND_RATIO);
 
-/* Висота сцени рахується від землі; ніяких накопичувальних компенсаторів */
+/* лінія землі завжди відносно viewport, а не висоти сцени */
+function groundY(){
+  return window.innerHeight * (1 - GROUND_RATIO);
+}
+
 function ensureSceneHeight(){
   const {h}=slotSize();
   const maxY=getMaxY();
@@ -79,8 +82,7 @@ function ensureSceneHeight(){
 }
 
 function cellToPx(x,y,w,h){
-  const sceneH = scene.clientHeight;
-  const gy = groundY(sceneH); // ground позиція для цього height
+  const gy = groundY(); // фіксована земля
   const baseTop = gy - h*(1-BURY) + GROUND_FUDGE;
   const totalW = (COLS + SIDE_GAP_SLOTS*2) * w;
   const left0  = (scene.clientWidth - totalW)/2 + SIDE_GAP_SLOTS*w;
@@ -206,6 +208,6 @@ window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.querySelec
 /* -------------------- INIT -------------------- */
 function renderAll(){ renderSlots(); ensureSceneHeight(); renderSlots(); }
 window.addEventListener('resize', ()=>{
-  renderAll();
+  renderAll(); // завжди перераховуємо з фіксованою землею
 });
 renderAll(); startFarm(); renderFarm();
