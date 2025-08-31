@@ -11,31 +11,51 @@
   <header class="top-ui">
     <div class="logo">MEGAHOUSE</div>
 
-    <div class="wallet-cards">
-      <div class="wallet-card" id="card-near" title="NEAR balance">
-        <div class="wc-icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
-            <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
-            <path d="M9 9h6v6H9z" fill="currentColor"/>
-          </svg>
+    <div class="top-center">
+      <!-- balances -->
+      <div class="wallet-cards">
+        <div class="wallet-card" id="card-near" title="NEAR balance">
+          <div class="wc-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
+              <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M9 9h6v6H9z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="wc-text">
+            <div class="wc-label">NEAR</div>
+            <div class="wc-value" id="nearValue">0.000</div>
+          </div>
         </div>
-        <div class="wc-text">
-          <div class="wc-label">NEAR</div>
-          <div class="wc-value" id="nearValue">0.000</div>
+
+        <div class="wallet-card" id="card-n" title="N-token balance">
+          <div class="wc-icon wc-n">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
+              <path d="M7 16V8l10 8V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="wc-text">
+            <div class="wc-label">N token</div>
+            <div class="wc-value" id="nValue">0.00</div>
+          </div>
         </div>
       </div>
 
-      <div class="wallet-card" id="card-n" title="N-token balance">
-        <div class="wc-icon wc-n">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
-            <path d="M7 16V8l10 8V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <!-- FARM (горизонтальний у верхній панелі) -->
+      <div class="farm-top" id="farmTop" title="Farm progress">
+        <span class="farm-top__label">Farm</span>
+        <div class="farm-top__bar" id="farmBar">
+          <div class="farm-top__fill" id="farmFill"></div>
         </div>
-        <div class="wc-text">
-          <div class="wc-label">N token</div>
-          <div class="wc-value" id="nValue">0.00</div>
+        <span class="farm-top__amount" id="farmAmount">0 N</span>
+        <button class="farm-top__claim" id="btnClaim" disabled>Claim</button>
+
+        <div class="farm-top__chips" id="farmChips">
+          <span class="chip">Rarity +10%</span>
+          <span class="chip">Neighbors +0%</span>
+          <span class="chip">Floor +4%</span>
+          <span class="chip">Set +0%</span>
         </div>
       </div>
     </div>
@@ -53,15 +73,7 @@
     <div id="placed"></div>
   </main>
 
-  <aside class="farm dock-right" id="farm">
-    <button class="farm-toggle" id="farmToggle" aria-label="Toggle farm panel"></button>
-    <div class="farm-head">Farm</div>
-    <div class="farm-track" id="farmTrack"><div class="farm-fill" id="farmFill"></div></div>
-    <div class="farm-amount" id="farmAmount">0 N</div>
-    <div class="farm-chips" id="farmChips"></div>
-    <button class="claim-btn" id="btnClaim" disabled>Claim</button>
-  </aside>
-
+  <!-- NFT picker -->
   <div class="modal" id="pickerModal" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
@@ -70,6 +82,7 @@
     </div>
   </div>
 
+  <!-- NFT info -->
   <div class="modal" id="infoModal" aria-hidden="true">
     <div class="modal__dialog">
       <button class="modal__close" data-close>×</button>
