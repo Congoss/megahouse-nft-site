@@ -10,6 +10,7 @@ const COLS=10, MAX_ROWS=60;
 const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90;
 const EXTRA_TOP_ROWS=2;
 const GROUND_RATIO=0.22;
+const BASE_OFFSET=1; // ⬅️ на скільки висот контейнера підняти старт (0 = як було, 1 = на один вище)
 const GROUND_FUDGE=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-fudge'))||8;
 
 /* DOM */
@@ -84,7 +85,8 @@ function ensureSceneHeight(){
 function cellToPx(x,y,w,h){
   const sceneH = scene.clientHeight;
   const gy = groundY(sceneH,h); // земля від низу сцени
-  const baseTop = gy - h*(1-BURY) + GROUND_FUDGE;
+  // базова вершина першого ряду, піднята на BASE_OFFSET контейнерів
+  const baseTop = gy - h*(1-BURY) - h*BASE_OFFSET + GROUND_FUDGE;
   const totalW = (COLS + SIDE_GAP_SLOTS*2) * w;
   const left0  = (scene.clientWidth - totalW)/2 + SIDE_GAP_SLOTS*w;
   return { left:left0 + x*w, top: baseTop - y*h };
@@ -202,7 +204,7 @@ function openInfo(tile,x,y,wrap){
 function openModal(n){ n.setAttribute("aria-hidden","false"); }
 function closeModal(n){ n.setAttribute("aria-hidden","true"); }
 document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
-document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) closeModal(m); }));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===м) closeModal(m); }));
 window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.querySelectorAll('.modal[aria-hidden="false"]').forEach(m=>closeModal(m)); }});
 
 /* -------------------- INIT -------------------- */
