@@ -60,7 +60,7 @@
     <div id="placed"></div>
   </main>
 
-  <!-- Пікер контейнерів -->
+  <!-- Пікер для встановлення контейнерів у слот -->
   <div class="modal" id="pickerModal" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
@@ -69,38 +69,48 @@
     </div>
   </div>
 
-  <!-- Info контейнера -->
-  <div class="modal" id="infoModal" aria-hidden="true">
-    <div class="modal__dialog">
+  <!-- Інтер’єр контейнера (6 секторів) -->
+  <div class="modal" id="interiorModal" aria-hidden="true">
+    <div class="modal__dialog wide">
       <button class="modal__close" data-close>×</button>
-      <div class="info-box">
-        <div class="info-box__preview">
-          <div class="stack">
-            <img id="infoImg" alt="container"/>
-            <div id="infoOverlays" class="tile-overlays"></div>
+      <div class="interior">
+        <div class="room">
+          <img class="room-bg" id="roomBg" src="img/decor/container_orange_in.png" alt="inside">
+          <div class="room-overlays" id="roomOverlays"></div>
+
+          <!-- Сітка 3×2 хот-спотів -->
+          <div class="hotspots" id="hotspots">
+            <button data-sector="s1" class="hotspot">+</button>
+            <button data-sector="s2" class="hotspot">+</button>
+            <button data-sector="s3" class="hotspot">+</button>
+            <button data-sector="s4" class="hotspot">+</button>
+            <button data-sector="s5" class="hotspot">+</button>
+            <button data-sector="s6" class="hotspot">+</button>
           </div>
-          <div class="info-number" id="infoNumber">#0001</div>
         </div>
-        <div class="info-box__meta">
-          <h3 id="infoTitle">Container</h3>
-          <div class="kv"><span>Owner</span><b id="infoOwner">demo.near</b></div>
-          <div class="kv"><span>Token ID</span><b id="infoToken">cont-1</b></div>
-          <div class="kv"><span>Coords</span><b id="infoCoords">0,0</b></div>
-          <div class="kv"><span>Rarity</span><b id="infoRarity">Common</b></div>
-          <div class="subt">Бонуси</div>
-          <ul class="bullet">
-            <li>Base: <b id="baseRate">1.00</b> N/hr</li>
-            <li>Rarity bonus: <b id="rarityBonus">+0%</b></li>
-            <li>Neighbors: <b id="neighborsBonus">+0%</b></li>
-            <li>Floor: <b id="floorBonus">+0%</b></li>
-          </ul>
-          <div class="info-actions">
-            <button id="btnUnstake" class="danger">Unstake</button>
-            <button id="btnDecorate">Decorate</button>
-            <button id="btnClear">Clear all</button>
+
+        <div class="interior-meta">
+          <h3 id="intTitle">Container</h3>
+          <div class="kv"><span>Owner</span><b id="intOwner">demo.near</b></div>
+          <div class="kv"><span>Token ID</span><b id="intToken">cont-1</b></div>
+          <div class="kv"><span>Coords</span><b id="intCoords">0,0</b></div>
+          <div class="interior-actions">
+            <button id="btnClearSector" class="danger" disabled>Clear sector</button>
+            <button id="btnClearAll">Clear all</button>
+            <button id="btnCloseInterior" class="primary">Готово</button>
           </div>
+          <div class="small">Клік по вже розміщеному предмету — прибирає його.</div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Міні-пікер для конкретного сектору -->
+  <div class="modal" id="sectorPicker" aria-hidden="true">
+    <div class="modal__dialog small">
+      <button class="modal__close" data-close>×</button>
+      <h3 class="modal__title" id="sectorTitle">Вибір декору</h3>
+      <div class="picker-grid" id="sectorGrid"></div>
     </div>
   </div>
 
