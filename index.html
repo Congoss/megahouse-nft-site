@@ -25,7 +25,6 @@
             <div class="wc-value" id="nearValue">0.000</div>
           </div>
         </div>
-
         <div class="wallet-card" id="card-n">
           <div class="wc-icon wc-n">
             <svg viewBox="0 0 24 24" width="18" height="18">
@@ -61,7 +60,7 @@
     <div id="placed"></div>
   </main>
 
-  <!-- NFT picker (контейнери, компактна плитка 7:3) -->
+  <!-- Пікер контейнерів -->
   <div class="modal" id="pickerModal" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
@@ -70,18 +69,15 @@
     </div>
   </div>
 
-  <!-- Info (показує наповнення відразу + сектори 2×3) -->
+  <!-- Info контейнера -->
   <div class="modal" id="infoModal" aria-hidden="true">
     <div class="modal__dialog">
       <button class="modal__close" data-close>×</button>
       <div class="info-box">
         <div class="info-box__preview">
-          <div class="preview-stack">
-            <img id="infoBaseImg" alt="container"/>
-            <!-- тут поверх рендеряться оверлеї 7:3 -->
-            <div id="infoOverlays" class="preview-overlays"></div>
-            <!-- клікабельна сітка 2×3 -->
-            <div class="sector-grid" id="sectorGrid"></div>
+          <div class="stack">
+            <img id="infoImg" alt="container"/>
+            <div id="infoOverlays" class="tile-overlays"></div>
           </div>
           <div class="info-number" id="infoNumber">#0001</div>
         </div>
@@ -90,23 +86,21 @@
           <div class="kv"><span>Owner</span><b id="infoOwner">demo.near</b></div>
           <div class="kv"><span>Token ID</span><b id="infoToken">cont-1</b></div>
           <div class="kv"><span>Coords</span><b id="infoCoords">0,0</b></div>
-          <div class="subt">Наповнення</div>
-          <ul class="sector-list" id="sectorList"></ul>
+          <div class="kv"><span>Rarity</span><b id="infoRarity">Common</b></div>
+          <div class="subt">Бонуси</div>
+          <ul class="bullet">
+            <li>Base: <b id="baseRate">1.00</b> N/hr</li>
+            <li>Rarity bonus: <b id="rarityBonus">+0%</b></li>
+            <li>Neighbors: <b id="neighborsBonus">+0%</b></li>
+            <li>Floor: <b id="floorBonus">+0%</b></li>
+          </ul>
           <div class="info-actions">
             <button id="btnUnstake" class="danger">Unstake</button>
-            <button id="btnClearAll">Clear all</button>
+            <button id="btnDecorate">Decorate</button>
+            <button id="btnClear">Clear all</button>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Sector Picker (попап вибору декору саме для натиснутого сектора) -->
-  <div class="modal" id="sectorModal" aria-hidden="true">
-    <div class="modal__dialog small">
-      <button class="modal__close" data-close>×</button>
-      <h3 class="modal__title">Вибір для сектора <span id="sectorTitle">S1</span></h3>
-      <div class="picker-grid" id="sectorGrid"></div>
     </div>
   </div>
 
