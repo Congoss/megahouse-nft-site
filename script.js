@@ -9,7 +9,7 @@ const tiles = [
 ];
 
 /* -------------------- GRID -------------------- */
-const COLS=10, MAX_ROWS=60;
+const COLS=6, MAX_ROWS=60;
 const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90;
 const EXTRA_TOP_ROWS=2;
 const GROUND_RATIO=0.22;
@@ -141,8 +141,8 @@ function placeTile(x,y,tile){
   wrap.style.left=left+"px"; wrap.style.top=top+"px";
   wrap.style.width=w+"px"; wrap.style.height=h+"px";
   wrap.dataset.x=x; wrap.dataset.y=y;
-  wrap.innerHTML=`<img class="tile-img" src="${tile.src}" alt="${tile.title}"><div class="tile-badge">${tile.title||"Scaffold"}</div>`;
-  if(tile.type!=="scaffold"){ wrap.onclick=()=>openInfo(tile,x,y,wrap); }
+  wrap.innerHTML=`<img class="tile-img" src="${tile.src}" alt="${tile.title}">
+  <div class="tile-badge">${tile.number||tile.id}</div>`; }
 
   placed.appendChild(wrap);
   occ.set(key(x,y), {type:tile.type||"tile", data:tile});
