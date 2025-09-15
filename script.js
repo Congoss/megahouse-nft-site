@@ -160,10 +160,17 @@ function renderTileOverlays(tokenId, container){
 }
 
 /* -------------------- MODALS -------------------- */
-function openModal(n){ n.setAttribute('aria-hidden','false'); }
-function closeModal(n){ n.setAttribute('aria-hidden','true'); }
-document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
-document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) closeModal(m); }));
+function openModal(n){
+  n.setAttribute('aria-hidden','false');
+  document.body.classList.add('modal-open');
+}
+
+function closeModal(n){
+  n.setAttribute('aria-hidden','true');
+  // якщо інших відкритих модалок немає — прибираємо клас
+  const anyOpen = [...document.querySelectorAll('.modal')].some(m => m.getAttribute('aria-hidden') === 'false');
+  if(!anyOpen) document.body.classList.remove('modal-open');
+}
 
 /* -------------------- INIT -------------------- */
 function renderAll(){
