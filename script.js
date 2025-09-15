@@ -59,7 +59,7 @@ setInterval(()=>{ near+=0.001; nTok+=0.01; nearValue.textContent=near.toFixed(3)
 function slotSize(){
   const usableCols=COLS + SIDE_GAP_SLOTS*2;
   const w=Math.floor(scene.clientWidth/usableCols);
-  const h=Math.round(w*3/4);
+  const h=Math.round(w*3/7);
   scene.style.setProperty("--slot-w",w+"px");
   scene.style.setProperty("--slot-h",h+"px");
   return {w,h};
