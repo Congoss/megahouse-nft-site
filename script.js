@@ -9,7 +9,7 @@ const tiles = [
 ];
 
 /* -------------------- GRID (7 колонок) -------------------- */
-let COLS = 7, MAX_ROWS = 60;                 // рівно 7 у ряд
+let COLS = 7, MAX_ROWS = 60;
 const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90, EXTRA_TOP_ROWS=2, GROUND_RATIO=0.28, BASE_OFFSET=1;
 const GROUND_FUDGE=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-fudge'))||8;
 
@@ -27,7 +27,7 @@ function slotSize(){
   const usable = COLS + SIDE_GAP_SLOTS*2;
   const sceneW = scene.clientWidth || window.innerWidth;
   const w = Math.floor(sceneW/usable);
-  const h = Math.round(w*3/7);     // пропорція 7:3
+  const h = Math.round(w*3/7); // 7:3
   scene.style.setProperty('--slot-w', w+'px');
   scene.style.setProperty('--slot-h', h+'px');
   return {w,h};
@@ -95,15 +95,13 @@ function placeTile(x,y,tile){
     <div class="tile-badge">${tile.number||tile.id}</div>
   `;
 
-  // клік по ВЕСЬОМУ контейнеру
-  wrap.addEventListener('click', ()=>openInfo(tile,x,y,wrap));
+  // натискання по всьому контейнеру → попап інтер’єру
+  wrap.addEventListener('click', ()=>openInterior(tile, x, y));
 
   placed.appendChild(wrap);
   occ.set(key(x,y),{type:'tile',data:tile});
 
   renderAll();
-
-  // якщо є оверлеї — намалюємо
   renderTileOverlays(tile.id, wrap.querySelector('.tile-overlays'));
 }
 function unstake(x,y,wrap){
@@ -134,55 +132,150 @@ function openPicker(x,y){
   openModal(pickerModal);
 }
 
-/* -------------------- INFO -------------------- */
-const infoModal  = document.getElementById('infoModal');
-const infoImg    = document.getElementById('infoImg');
-const infoOver   = document.getElementById('infoOverlays');
-const infoTitle  = document.getElementById('infoTitle');
-const infoOwner  = document.getElementById('infoOwner');
-const infoToken  = document.getElementById('infoToken');
-const infoCoords = document.getElementById('infoCoords');
-const infoRarity = document.getElementById('infoRarity');
-const infoNumber = document.getElementById('infoNumber');
-const btnUnstake = document.getElementById('btnUnstake');
-const btnDecorate= document.getElementById('btnDecorate');
-const btnClear   = document.getElementById('btnClear');
+/* -------------------- ІНТЕР’ЄР: 6 секторів -------------------- */
+const interiorModal = document.getElementById('interiorModal');
+const roomBg        = document.getElementById('roomBg');
+const roomOverlays  = document.getElementById('roomOverlays');
+const hotspotsEl    = document.getElementById('hotspots');
 
-function openInfo(tile,x,y,wrap){
-  infoImg.src = tile.src;
-  infoTitle.textContent = tile.title;
-  infoOwner.textContent = tile.owner;
-  infoToken.textContent = tile.id;
-  infoCoords.textContent= `${x},${y}`;
-  infoRarity.textContent= tile.rarity||'Common';
-  infoNumber.textContent= tile.number||tile.id;
+const intTitle  = document.getElementById('intTitle');
+const intOwner  = document.getElementById('intOwner');
+const intToken  = document.getElementById('intToken');
+const intCoords = document.getElementById('intCoords');
 
-  if(infoOver){ infoOver.innerHTML=''; renderTileOverlays(tile.id, infoOver); }
+const btnClearSector = document.getElementById('btnClearSector');
+const btnClearAll    = document.getElementById('btnClearAll');
+const btnCloseInt    = document.getElementById('btnCloseInterior');
 
-  btnUnstake.onclick=()=>{
-    if(confirm('Unstake?')){ unstake(x,y,wrap); closeModal(infoModal); }
-  };
-  btnDecorate.onclick=()=>alert('Decorate: відкриємо інтер’єр у наступному кроці 😉');
-  btnClear.onclick=()=>{
-    const map=new Map(JSON.parse(localStorage.getItem('interiors_v2')||'[]'));
-    map.delete(tile.id);
-    localStorage.setItem('interiors_v2', JSON.stringify([...map.entries()]));
-    if(infoOver) infoOver.innerHTML='';
-  };
+let currentTokenId=null;
+let currentSector=null;
 
-  openModal(infoModal);
+/* Категорії по секторах */
+const SECTOR_CATEGORIES = {
+  s1:'poster', s2:'neon', s3:'monitor',
+  s4:'pet',    s5:'sofa', s6:'rig'
+};
+
+/* Каталог активів (повнорозмірні PNG 7:3, “вже на місці”) */
+const ASSETS = {
+  poster:  [{id:'poster-near', title:'Poster NEAR',     src:'img/decor/poster near.png'}],
+  neon:    [{id:'neon-hodl',   title:'Neon HODL',       src:'img/decor/neon hodl.png', neon:true}],
+  monitor: [{id:'monitor',     title:'Wall Monitor',    src:'img/decor/monitor.png',   monitor:true}],
+  pet:     [{id:'dog',         title:'Shiba Doge',      src:'img/decor/dog.png'}],
+  sofa:    [{id:'hot-sofa-ledger', title:'Hot Wallet Sofa', src:'img/decor/hot sofa ledger.png'}],
+  rig:     [{id:'rig1',        title:'Rig x1',          src:'img/decor/rig1.png'}],
+};
+
+/* state у localStorage */
+function loadInteriors(){
+  return new Map(JSON.parse(localStorage.getItem('interiors_v3')||'[]'));
+}
+function saveInteriors(map){
+  localStorage.setItem('interiors_v3', JSON.stringify([...map.entries()]));
 }
 
-/* -------------------- Оверлеї (для інтер’єру) -------------------- */
-function renderTileOverlays(tokenId, container){
-  if(!container) return;
-  const interiors = new Map(JSON.parse(localStorage.getItem('interiors_v2')||'[]'));
-  const SECTORS   = ["s1","s2","s3","s4","s5","s6"];
-  container.innerHTML="";
-  const state = interiors.get(tokenId) || {};
-  SECTORS.forEach(sid=>{
+/* відкрити інтер’єр конкретного контейнера */
+function openInterior(tile, x, y){
+  currentTokenId = tile.id;
+  currentSector  = null;
+
+  intTitle.textContent  = tile.title;
+  intOwner.textContent  = tile.owner;
+  intToken.textContent  = tile.id;
+  intCoords.textContent = `${x},${y}`;
+
+  // фон можна міняти залежно від кольору/типу; зараз одна картинка
+  roomBg.src = 'img/decor/container_orange_in.png';
+
+  renderInteriorOverlays();
+  btnClearSector.disabled = true;
+
+  openModal(interiorModal);
+}
+
+/* намалювати всі оверлеї для поточного tokenId */
+function renderInteriorOverlays(){
+  const interiors = loadInteriors();
+  const state = interiors.get(currentTokenId) || {};
+  roomOverlays.innerHTML = '';
+
+  // для кожного сектора якщо є item — кладемо full-size PNG
+  Object.keys(SECTOR_CATEGORIES).forEach(sid=>{
     const it = state[sid];
     if(!it) return;
+    const img=document.createElement('img');
+    img.src = it.src;
+    if(it.neon)    img.classList.add('neon-glow');
+    if(it.monitor) img.classList.add('monitor-fx');
+    img.title='Клік — прибрати';
+    img.onclick=()=>{ delete state[sid]; // toggle remove
+                      const map=loadInteriors(); map.set(currentTokenId,state); saveInteriors(map);
+                      renderInteriorOverlays(); };
+    roomOverlays.appendChild(img);
+  });
+}
+
+/* хот-споти */
+hotspotsEl.addEventListener('click', (e)=>{
+  const b=e.target.closest('.hotspot'); if(!b) return;
+  currentSector = b.dataset.sector;
+  btnClearSector.disabled = false;
+  openSectorPicker(SECTOR_CATEGORIES[currentSector]);
+});
+
+/* кнопки */
+btnClearSector.onclick=()=>{
+  if(!currentSector) return;
+  const map = loadInteriors();
+  const state = map.get(currentTokenId) || {};
+  delete state[currentSector];
+  map.set(currentTokenId,state);
+  saveInteriors(map);
+  renderInteriorOverlays();
+  btnClearSector.disabled = true;
+};
+btnClearAll.onclick=()=>{
+  const map = loadInteriors();
+  map.delete(currentTokenId);
+  saveInteriors(map);
+  renderInteriorOverlays();
+};
+btnCloseInt.onclick=()=>closeModal(interiorModal);
+
+/* -------------------- Міні-пікер для сектору -------------------- */
+const sectorPicker = document.getElementById('sectorPicker');
+const sectorTitle  = document.getElementById('sectorTitle');
+const sectorGrid   = document.getElementById('sectorGrid');
+
+function openSectorPicker(cat){
+  sectorTitle.textContent = 'Вибір: ' + cat;
+  sectorGrid.innerHTML='';
+  (ASSETS[cat]||[]).forEach(item=>{
+    const card=document.createElement('div');
+    card.className='picker-card';
+    card.innerHTML=`<img src="${item.src}" alt="${item.title}">
+                    <div class="meta"><div>${item.title}</div><button>Place</button></div>`;
+    card.querySelector('button').onclick=()=>{
+      const map = loadInteriors();
+      const state = map.get(currentTokenId) || {};
+      state[currentSector] = {id:item.id, title:item.title, src:item.src, neon:!!item.neon, monitor:!!item.monitor};
+      map.set(currentTokenId,state);
+      saveInteriors(map);
+      renderInteriorOverlays();
+      closeModal(sectorPicker);
+    };
+    sectorGrid.appendChild(card);
+  });
+  openModal(sectorPicker);
+}
+
+/* -------------------- Оверлеї на сцені (поверх контейнера) -------------------- */
+function renderTileOverlays(tokenId, container){
+  if(!container) return;
+  const map = loadInteriors();
+  const state = map.get(tokenId) || {};
+  container.innerHTML="";
+  Object.values(state).forEach(it=>{
     const img=document.createElement('img');
     img.src = it.src;
     if(it.neon)    img.classList.add('neon-glow');
