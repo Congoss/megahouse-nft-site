@@ -33,11 +33,28 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
 .farm-top__claim{border:none;border-radius:18px;padding:6px 10px;background:var(--accent2);color:#1a0a00;font-weight:800;cursor:pointer}
 
 /* scene */
-#scene{position:relative;min-height:100vh;padding-top:56px;background:url("img/background1.png") no-repeat center bottom/cover}
+#scene{
+  position:relative;min-height:100vh;padding-top:56px;
+  background:url("img/background1.png") no-repeat center bottom/cover
+}
 
-/* layers: «плюси» під контейнерами, але клікабельні */
-#slots {position:absolute;inset:0;z-index:2000; pointer-events:auto;}
-#placed{display:contents;} /* контейнерний шар не перекриває сцену */
+/* Шар зі слотами (плюси) — завжди видно на порожніх місцях */
+#slots{
+  position:absolute; inset:0;
+  z-index:6000;
+  pointer-events:auto;
+}
+
+/* Контейнери — поверх плюсів, коли вони є */
+#placed{display:contents;}
+.tile-wrap{ position:absolute; width:var(--slot-w); height:var(--slot-h);
+  border-radius:0; overflow:hidden; box-shadow:0 6px 16px rgba(0,0,0,.45);
+  pointer-events:auto; z-index:6500;
+}
+.tile-img{width:100%;height:100%;object-fit:cover;display:block}
+.tile-badge{position:absolute;left:8px;bottom:6px;padding:4px 8px;background:rgba(0,0,0,.55);border-radius:8px;font-size:12px;pointer-events:none;}
+.tile-overlays{position:absolute;inset:0;pointer-events:none;}
+.tile-overlays img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
 /* слот */
 .slot{
@@ -45,19 +62,8 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
   border:2px dashed rgba(255,255,255,.35);background:rgba(255,255,255,.08);
   display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .06s ease;
 }
-.slot:hover{transform:translateY(-1px)}
 .slot::after{content:"+";font-size:28px;color:#fff}
-
-/* контейнер */
-.tile-wrap{
-  position:absolute;width:var(--slot-w);height:var(--slot-h);
-  border-radius:0;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.45);
-  pointer-events:auto; z-index:2500;
-}
-.tile-img{width:100%;height:100%;object-fit:cover;display:block}
-.tile-badge{position:absolute;left:8px;bottom:6px;padding:4px 8px;background:rgba(0,0,0,.55);border-radius:8px;font-size:12px;pointer-events:none;}
-.tile-overlays{position:absolute;inset:0;pointer-events:none;}
-.tile-overlays img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slot:hover{transform:translateY(-1px)}
 
 /* modals */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:10000}
@@ -72,15 +78,21 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
 .interior{display:grid;grid-template-columns:minmax(680px,58%) 1fr;gap:14px}
 .room{position:relative;width:100%;aspect-ratio:7/3;background:#0d1318;border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
 .room-bg{width:100%;height:100%;object-fit:cover;display:block}
-.room-overlays{position:absolute;inset:0;pointer-events:auto;} /* клік по зображенню = remove */
-.room-overlays img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;cursor:pointer}
 
-/* hotspots grid 3x2 */
-.hotspots{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:0}
-.hotspot{place-self:center; width:clamp(28px,3.2vw,40px); height:clamp(28px,3.2vw,40px);
-  border-radius:50%; border:1px dashed rgba(255,255,255,.6); background:rgba(255,255,255,.18);
-  color:#fff; font-weight:900; cursor:pointer; display:grid;place-items:center}
-.hotspot:hover{transform:translateY(-1px)}
+/* шари всередині інтерʼєру */
+.room-overlays{position:absolute;inset:0;z-index:2;pointer-events:auto}
+.room-overlays img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hotspots{
+  position:absolute;inset:0;display:grid;
+  grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);
+  z-index:3;pointer-events:auto;
+}
+.hotspot{
+  place-self:center;width:clamp(28px,3.2vw,40px);height:clamp(28px,3.2vw,40px);
+  border-radius:50%;border:1px dashed rgba(255,255,255,.6);
+  background:rgba(255,255,255,.18);color:#fff;font-weight:900;
+  display:grid;place-items:center;cursor:pointer;transition:opacity .15s ease;
+}
 
 /* interior meta */
 .interior-meta{display:flex;flex-direction:column;gap:8px}
@@ -110,3 +122,6 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
   100% { filter: brightness(0.8); transform:scale(1); }
 }
 .monitor-fx{animation:chartBlink 2s ease-in-out infinite}
+
+/* коли модалки відкриті — блочимо сцену */
+body.modal-open #slots{ pointer-events:none; }
