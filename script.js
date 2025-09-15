@@ -14,7 +14,7 @@ function recalcCols(){
   const w = (scene?.clientWidth)||window.innerWidth;
   COLS = w>=1600 ? 16 : w>=1280 ? 14 : w>=900 ? 12 : 10;
 }
-const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90, EXTRA_TOP_ROWS=2, GROUND_RATIO=0.22, BASE_OFFSET=1;
+const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90, EXTRA_TOP_ROWS=2, GROUND_RATIO=0.30, BASE_OFFSET=1;
 const GROUND_FUDGE=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-fudge'))||8;
 
 /* DOM */
