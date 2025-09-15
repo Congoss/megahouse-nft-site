@@ -164,11 +164,9 @@ function openModal(n){
   n.setAttribute('aria-hidden','false');
   document.body.classList.add('modal-open');
 }
-
 function closeModal(n){
   n.setAttribute('aria-hidden','true');
-  // якщо інших відкритих модалок немає — прибираємо клас
-  const anyOpen = [...document.querySelectorAll('.modal')].some(m => m.getAttribute('aria-hidden') === 'false');
+  const anyOpen = [...document.querySelectorAll('.modal')].some(m => m.getAttribute('aria-hidden')==='false');
   if(!anyOpen) document.body.classList.remove('modal-open');
 }
 
