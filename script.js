@@ -13,7 +13,7 @@ let COLS = 10, MAX_ROWS = 60;
 const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90;
 const EXTRA_TOP_ROWS=2;
 const GROUND_RATIO=0.22;
-const BASE_OFFSET=1; // ⬅️ на скільки висот контейнера підняти старт (0 = як було, 1 = на один вище)
+const BASE_OFFSET=1; // на скільки висот контейнера підняти старт
 const GROUND_FUDGE=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-fudge'))||8;
 
 /* DOM */
@@ -59,7 +59,7 @@ setInterval(()=>{ near+=0.001; nTok+=0.01; nearValue.textContent=near.toFixed(3)
 function slotSize(){
   const usableCols=COLS + SIDE_GAP_SLOTS*2;
   const w=Math.floor(scene.clientWidth/usableCols);
-  const h=Math.round(w*3/7);
+  const h=Math.round(w*3/7); // 700:300
   scene.style.setProperty("--slot-w",w+"px");
   scene.style.setProperty("--slot-h",h+"px");
   return {w,h};
@@ -88,7 +88,6 @@ function ensureSceneHeight(){
 function cellToPx(x,y,w,h){
   const sceneH = scene.clientHeight;
   const gy = groundY(sceneH,h); // земля від низу сцени
-  // базова вершина першого ряду, піднята на BASE_OFFSET контейнерів
   const baseTop = gy - h*(1-BURY) - h*BASE_OFFSET + GROUND_FUDGE;
   const totalW = (COLS + SIDE_GAP_SLOTS*2) * w;
   const left0  = (scene.clientWidth - totalW)/2 + SIDE_GAP_SLOTS*w;
@@ -138,11 +137,21 @@ function placeTile(x,y,tile){
 
   const wrap=document.createElement("div");
   wrap.className="tile-wrap";
-  wrap.style.left=left+"px"; wrap.style.top=top+"px";
-  wrap.style.width=w+"px"; wrap.style.height=h+"px";
-  wrap.dataset.x=x; wrap.dataset.y=y;
-  wrap.innerHTML=`<img class="tile-img" src="${tile.src}" alt="${tile.title}">
-  <div class="tile-badge">${tile.number||tile.id}</div>`; }
+  wrap.style.left=left+"px"; 
+  wrap.style.top=top+"px";
+  wrap.style.width=w+"px"; 
+  wrap.style.height=h+"px";
+  wrap.dataset.x=x; 
+  wrap.dataset.y=y;
+
+  wrap.innerHTML = `
+    <img class="tile-img" src="${tile.src}" alt="${tile.title}">
+    <div class="tile-badge">${tile.number || tile.id}</div>
+  `;
+
+  if(tile.type!=="scaffold"){ 
+    wrap.onclick = ()=>openInfo(tile,x,y,wrap); 
+  }
 
   placed.appendChild(wrap);
   occ.set(key(x,y), {type:tile.type||"tile", data:tile});
@@ -170,7 +179,8 @@ function openPicker(x,y){
   pickTarget={x,y}; pickerGrid.innerHTML="";
   tiles.forEach(t=>{
     const card=document.createElement("div"); card.className="picker-card";
-    card.innerHTML=`<img src="${t.src}" alt="${t.title}"><div class="meta"><div class="title">${t.title}</div><button>Place</button></div>`;
+    card.innerHTML=`<img src="${t.src}" alt="${t.title}">
+      <div class="meta"><div class="title">${t.title}</div><button>Place</button></div>`;
     card.querySelector("button").onclick=()=>{ placeTile(pickTarget.x,pickTarget.y,t); closeModal(pickerModal); };
     pickerGrid.appendChild(card);
   });
@@ -207,12 +217,15 @@ function openInfo(tile,x,y,wrap){
 function openModal(n){ n.setAttribute("aria-hidden","false"); }
 function closeModal(n){ n.setAttribute("aria-hidden","true"); }
 document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
-document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===м) closeModal(m); }));
-window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.querySelectorAll('.modal[aria-hidden="false"]').forEach(m=>closeModal(m)); }});
-
-/* -------------------- INIT -------------------- */
-function renderAll(){ renderSlots(); ensureSceneHeight(); renderSlots(); }
-window.addEventListener('resize', ()=>{
-  renderAll();
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{
+  if(e.target===m) closeModal(m); // ← латинська m
+}));
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ document.querySelectorAll('.modal[aria-hidden="false"]').forEach(m=>closeModal(m)); }
 });
+
+/* -------------------- INIT + утиліта колонок -------------------- */
+function renderAll(){ renderSlots(); ensureSceneHeight(); renderSlots(); }
+window.addEventListener('resize', ()=>{ renderAll(); });
+function setCols(n){ COLS = Math.max(3, Math.min(12, Math.floor(n))); renderAll(); } // викликай з консолі: setCols(6)
 renderAll(); startFarm(); renderFarm();
