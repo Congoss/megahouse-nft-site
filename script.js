@@ -9,7 +9,11 @@ const tiles = [
 ];
 
 /* -------------------- GRID -------------------- */
-let COLS=10, MAX_ROWS=60;
+let COLS=12, MAX_ROWS=60; // COLS is adaptive via recalcCols()
+function recalcCols(){
+  const w = (scene?.clientWidth)||window.innerWidth;
+  COLS = w>=1600 ? 16 : w>=1280 ? 14 : w>=900 ? 12 : 10;
+}
 const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90, EXTRA_TOP_ROWS=2, GROUND_RATIO=0.22, BASE_OFFSET=1;
 const GROUND_FUDGE=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-fudge'))||8;
 
@@ -26,7 +30,7 @@ const key=(x,y)=>`${x},${y}`;
 function slotSize(){
   const usable=COLS + SIDE_GAP_SLOTS*2;
   const w=Math.floor(scene.clientWidth/usable);
-  const h=Math.round(w*3/7);
+  const h=Math.round(w*3/7);        // 7:3 ratio
   scene.style.setProperty('--slot-w',w+'px');
   scene.style.setProperty('--slot-h',h+'px');
   return {w,h};
@@ -39,7 +43,7 @@ function ensureSceneHeight(){
   scene.style.minHeight=Math.max(window.innerHeight,needH)+'px';
 }
 function cellToPx(x,y,w,h){
-  const gy=groundY(scene.clientHeight,h);
+  const gy=groundY(scene.clientHeight||window.innerHeight,h);
   const baseTop=gy - h*(1-BURY) - h*BASE_OFFSET + GROUND_FUDGE;
   const totalW=(COLS + SIDE_GAP_SLOTS*2)*w;
   const left0=(scene.clientWidth-totalW)/2 + SIDE_GAP_SLOTS*w;
@@ -261,9 +265,9 @@ document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) closeModal(m); }));
 
 /* -------------------- INIT -------------------- */
-function renderAll(){ renderSlots(); ensureSceneHeight(); renderSlots(); }
-window.addEventListener('resize',renderAll);
-renderAll();
+function renderAll(){ recalcCols(); renderSlots(); ensureSceneHeight(); renderSlots(); }
+window.addEventListener('resize', ()=>{ renderAll(); });
+document.addEventListener('DOMContentLoaded', renderAll);
 
 /* -------------------- DEMО: баланси + фарм -------------------- */
 const nearValue=document.getElementById('nearValue');
