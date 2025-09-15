@@ -8,8 +8,8 @@ const tiles = [
   { id:"cont-violet", title:"Violet Container", owner:"demo.near", src:"img/container_violet.png", number:"#0006", rarity:"Rare" }
 ];
 
-/* -------------------- GRID -------------------- */
-let COLS=12, MAX_ROWS=60; // COLS is adaptive via recalcCols()
+/* -------------------- GRID (менші тайли, адаптив) -------------------- */
+let COLS=12, MAX_ROWS=60;
 function recalcCols(){
   const w = (scene?.clientWidth)||window.innerWidth;
   COLS = w>=1600 ? 16 : w>=1280 ? 14 : w>=900 ? 12 : 10;
@@ -30,7 +30,7 @@ const key=(x,y)=>`${x},${y}`;
 function slotSize(){
   const usable=COLS + SIDE_GAP_SLOTS*2;
   const w=Math.floor(scene.clientWidth/usable);
-  const h=Math.round(w*3/7);        // 7:3 ratio
+  const h=Math.round(w*3/7); // 7:3
   scene.style.setProperty('--slot-w',w+'px');
   scene.style.setProperty('--slot-h',h+'px');
   return {w,h};
@@ -92,8 +92,15 @@ function placeTile(x,y,tile){
   wrap.className='tile-wrap';
   Object.assign(wrap.style,{left:left+'px',top:top+'px',width:w+'px',height:h+'px'});
   wrap.dataset.x=x; wrap.dataset.y=y;
-  wrap.innerHTML=`<img class="tile-img" src="${tile.src}" alt="${tile.title}">
-                  <div class="tile-badge">${tile.number||tile.id}</div>`;
+
+  // шар: базовий контейнер
+  const baseImg = `<img class="tile-img" src="${tile.src}" alt="${tile.title}">`;
+  // шар: оверлеї 7:3
+  const overlays = `<div class="tile-overlays" data-token="${tile.id}"></div>`;
+  // бейдж
+  const badge = `<div class="tile-badge">${tile.number||tile.id}</div>`;
+
+  wrap.innerHTML = baseImg + overlays + badge;
   wrap.onclick=()=>openInfo(tile,x,y,wrap);
 
   placed.appendChild(wrap);
@@ -101,6 +108,9 @@ function placeTile(x,y,tile){
 
   renderSlots(); ensureSceneHeight(); renderSlots();
   requestAnimationFrame(()=>wrap.scrollIntoView({behavior:'smooth',block:'center'}));
+
+  // відрендерити оверлеї, якщо були збережені раніше
+  renderTileOverlays(tile.id, wrap.querySelector('.tile-overlays'));
 }
 function unstake(x,y,wrap){
   wrap.remove();
@@ -108,7 +118,7 @@ function unstake(x,y,wrap){
   renderSlots();
 }
 
-/* picker */
+/* picker (контейнери, компактна плитка) */
 const pickerModal=document.getElementById('pickerModal');
 const pickerGrid =document.getElementById('pickerGrid');
 let pickTarget=null;
@@ -130,132 +140,201 @@ function openPicker(x,y){
   openModal(pickerModal);
 }
 
-/* info */
-const infoModal=document.getElementById('infoModal');
-const infoImg=document.getElementById('infoImg');
-const infoRarity=document.getElementById('infoRarity');
-const infoNumber=document.getElementById('infoNumber');
-const infoTitle=document.getElementById('infoTitle');
-const infoOwner=document.getElementById('infoOwner');
-const infoToken=document.getElementById('infoToken');
-const infoCoords=document.getElementById('infoCoords');
-const btnUnstake=document.getElementById('btnUnstake');
-const btnDecorate=document.getElementById('btnDecorate');
+/* -------------------- СЕКТОРИ ТА ДЕКОР -------------------- */
+const SECTORS = ["s1","s2","s3","s4","s5","s6"]; // 2×3 (зліва направо, зверху вниз)
+const ALLOWED = {
+  s1: ["poster","neon","monitor"],
+  s2: ["poster","neon","monitor"],
+  s3: ["poster","neon","monitor"],
+  s4: ["pet","small","box"],
+  s5: ["sofa","rig","table","pet"],
+  s6: ["rig","cabinet","box"]
+};
+
+// Повнорозмірні PNG 7:3 з прозорістю поза межами секторів
+const ASSETS = {
+  poster:  [{id:"poster-near", title:"Poster NEAR", src:"img/overlays/poster/poster_near.png"}],
+  neon:    [{id:"neon-hodl",   title:"Neon HODL",   src:"img/overlays/neon/neon_hodl.png", neon:true}],
+  monitor: [{id:"monitor",     title:"Monitor",     src:"img/overlays/monitor/monitor.png", monitor:true}],
+  sofa:    [{id:"sofa-ledger", title:"Sofa Ledger", src:"img/overlays/sofa/sofa_ledger.png"}],
+  rig:     [{id:"rig1",        title:"Rig x1",      src:"img/overlays/rig/rig1.png"}],
+  pet:     [{id:"doge",        title:"Shiba Doge",  src:"img/overlays/pet/dog.png"}],
+  table:   [{id:"table1",      title:"Table",       src:"img/overlays/table/table1.png"}],
+  box:     [{id:"box1",        title:"Box",         src:"img/overlays/box/box1.png"}],
+  cabinet: [{id:"cabinet1",    title:"Cabinet",     src:"img/overlays/cabinet/cabinet1.png"}],
+  small:   [{id:"plant1",      title:"Plant",       src:"img/overlays/small/plant1.png"}],
+};
+
+const interiors = new Map(JSON.parse(localStorage.getItem('interiors_v2')||'[]')); // tokenId -> {s1:{...},...}
+function persistInteriors(){ localStorage.setItem('interiors_v2', JSON.stringify([...interiors.entries()])); }
+
+/* Інфо-модал (показує відразу наповнення) */
+const infoModal   = document.getElementById('infoModal');
+const infoBaseImg = document.getElementById('infoBaseImg');
+const infoOverlays= document.getElementById('infoOverlays');
+const infoTitle   = document.getElementById('infoTitle');
+const infoOwner   = document.getElementById('infoOwner');
+const infoToken   = document.getElementById('infoToken');
+const infoCoords  = document.getElementById('infoCoords');
+const infoNumber  = document.getElementById('infoNumber');
+const sectorList  = document.getElementById('sectorList');
+const sectorGrid  = document.getElementById('sectorGrid');
+const btnUnstake  = document.getElementById('btnUnstake');
+const btnClearAll = document.getElementById('btnClearAll');
+
+let currentTile=null, currentWrap=null, currentXY=null;
 
 function openInfo(tile,x,y,wrap){
-  infoImg.src=tile.src;
+  currentTile = tile; currentWrap = wrap; currentXY = {x,y};
+  infoBaseImg.src = tile.src;
   infoTitle.textContent = tile.title;
   infoOwner.textContent = tile.owner;
   infoToken.textContent = tile.id;
   infoCoords.textContent= `${x},${y}`;
-  infoRarity.textContent = tile.rarity;
-  infoNumber.textContent = tile.number;
-  btnUnstake.onclick=()=>{
-    if(confirm('Unstake?')){ unstake(x,y,wrap); closeModal(infoModal); }
+  infoNumber.textContent = tile.number || tile.id;
+
+  // рендер оверлеїв у модалці
+  renderInfoOverlays(tile.id);
+
+  // сітка 2×3 для швидкого додавання
+  sectorGrid.innerHTML = "";
+  SECTORS.forEach((sid,i)=>{
+    const b=document.createElement('button');
+    b.title=`Додати/замінити в ${sid.toUpperCase()}`;
+    b.onclick=()=>openSectorPicker(sid);
+    sectorGrid.appendChild(b);
+  });
+
+  // список наповнення
+  renderSectorList(tile.id);
+
+  btnUnstake.onclick=()=>{ if(confirm('Unstake?')){ unstake(x,y,wrap); closeModal(infoModal); } };
+  btnClearAll.onclick=()=>{
+    interiors.set(tile.id, {});
+    persistInteriors();
+    renderInfoOverlays(tile.id);
+    renderTileOverlays(tile.id, wrap.querySelector('.tile-overlays'));
+    renderSectorList(tile.id);
   };
-  btnDecorate.onclick=()=>openInterior(tile);
+
   openModal(infoModal);
 }
 
-/* -------------------- INTERIOR -------------------- */
-const interiorModal=document.getElementById('interiorModal');
-const room        =document.getElementById('room');
-const decorGrid   =document.getElementById('decorGrid');
-const decorTabs   =document.getElementById('decorTabs');
-const btnCloseInt =document.getElementById('btnCloseInterior');
-
-const HOTSPOTS = [
-  {id:'poster-left',  x:20, y:28, w:16, type:'poster'},
-  {id:'neon',         x:50, y:28, w:22, type:'neon'},
-  {id:'monitor',      x:80, y:35, w:22, type:'monitor'},
-  {id:'pet',          x:20, y:78, w:18, type:'pet'},
-  {id:'sofa',         x:50, y:78, w:34, type:'sofa'},
-  {id:'rig',          x:80, y:78, w:22, type:'rig'}
-];
-
-const ASSETS = {
-  sofa:    [{id:'hot-sofa-ledger', title:'Hot Wallet Sofa', src:'img/decor/hot sofa ledger.png'}],
-  rig:     [{id:'rig1',            title:'Rig x1',          src:'img/decor/rig1.png'}],
-  pet:     [{id:'dog',             title:'Shiba Doge',      src:'img/decor/dog.png'}],
-  poster:  [{id:'poster-near',     title:'Poster NEAR',     src:'img/decor/poster near.png'}],
-  neon:    [{id:'neon-hodl',       title:'Neon HODL',       src:'img/decor/neon hodl.png', neon:true}],
-  monitor: [{id:'monitor',         title:'Wall Monitor',    src:'img/decor/monitor.png', monitor:true}],
-};
-
-const INTERIOR_BG = 'img/decor/container_orange_in.png';
-
-/* tokenId -> { hotspotId: {id,title,src,neon?,monitor?} } */
-const interiors = new Map(JSON.parse(localStorage.getItem('interiors')||'[]'));
-let currentTile=null;
-
-function openInterior(tile){
-  currentTile=tile;
-  renderRoom();
-  renderCatalog('sofa');
-  openModal(interiorModal);
+function renderInfoOverlays(tokenId){
+  infoOverlays.innerHTML="";
+  const state = interiors.get(tokenId) || {};
+  SECTORS.forEach(sid=>{
+    const it = state[sid];
+    if(!it) return;
+    const img=document.createElement('img');
+    img.src = it.src;
+    if(it.neon)    img.classList.add('neon-glow');
+    if(it.monitor) img.classList.add('monitor-fx');
+    infoOverlays.appendChild(img);
+  });
 }
 
-function renderRoom(){
-  room.innerHTML = `<img class="bg" src="${INTERIOR_BG}" alt="">`;
-  const state = interiors.get(currentTile.id) || {};
-  HOTSPOTS.forEach(h=>{
-    const placed = state[h.id];
-    if(placed){
-      const node=document.createElement('div');
-      node.className='decor'+(placed.neon?' neon':'')+(placed.monitor?' monitor':'');
-      node.style.setProperty('--x',h.x);
-      node.style.setProperty('--y',h.y);
-      node.style.setProperty('--w',h.w);
-      node.innerHTML=`<img src="${placed.src}" alt="${placed.title}">`;
-      node.title='Клік — прибрати';
-      node.onclick=()=>{ delete state[h.id]; interiors.set(currentTile.id,state); persistInteriors(); renderRoom(); };
-      room.appendChild(node);
+function renderTileOverlays(tokenId, container){
+  if(!container) return;
+  container.innerHTML="";
+  const state = interiors.get(tokenId) || {};
+  SECTORS.forEach(sid=>{
+    const it = state[sid];
+    if(!it) return;
+    const img=document.createElement('img');
+    img.src = it.src;
+    if(it.neon)    img.classList.add('neon-glow');
+    if(it.monitor) img.classList.add('monitor-fx');
+    container.appendChild(img);
+  });
+}
+
+function renderSectorList(tokenId){
+  sectorList.innerHTML="";
+  const state = interiors.get(tokenId) || {};
+  SECTORS.forEach((sid,idx)=>{
+    const li=document.createElement('li');
+    li.className='sector-item';
+    const label = `<b>${sid.toUpperCase()}</b>`;
+    if(state[sid]){
+      const t = state[sid];
+      li.innerHTML = `${label} <span class="tag">${t.title}</span>
+        <button data-act="remove" data-sid="${sid}">Remove</button>`;
     }else{
-      const btn=document.createElement('button');
-      btn.className='hotspot';
-      btn.style.setProperty('--x',h.x);
-      btn.style.setProperty('--y',h.y);
-      btn.onclick=()=>selectHotspot(h);
-      room.appendChild(btn);
+      li.innerHTML = `${label} <span class="tag">порожньо</span>
+        <button data-act="add" data-sid="${sid}">+</button>`;
     }
+    sectorList.appendChild(li);
   });
-}
 
-function selectHotspot(h){
-  [...decorTabs.querySelectorAll('button')].forEach(b=>b.classList.toggle('active', b.dataset.cat===h.type));
-  renderCatalog(h.type, h);
-}
-
-function renderCatalog(cat, hotspot=null){
-  decorGrid.innerHTML='';
-  (ASSETS[cat]||[]).forEach(item=>{
-    const card=document.createElement('div');
-    card.className='decor-card';
-    card.innerHTML=`<img src="${item.src}" alt="${item.title}">
-                    <div class="row"><div>${item.title}</div><button>Place</button></div>`;
-    card.querySelector('button').onclick=()=>{
+  // делегування дій
+  sectorList.onclick = (e)=>{
+    const btn=e.target.closest('button'); if(!btn) return;
+    const sid=btn.dataset.sid;
+    if(btn.dataset.act==="remove"){
       const state = interiors.get(currentTile.id) || {};
-      const target = hotspot || HOTSPOTS.find(s=>s.type===cat) || HOTSPOTS[0];
-      state[target.id] = {id:item.id,title:item.title,src:item.src,neon:item.neon||false,monitor:item.monitor||false};
-      interiors.set(currentTile.id,state);
+      delete state[sid];
+      interiors.set(currentTile.id, state);
       persistInteriors();
-      renderRoom();
-    };
-    decorGrid.appendChild(card);
-  });
+      renderInfoOverlays(currentTile.id);
+      renderTileOverlays(currentTile.id, currentWrap.querySelector('.tile-overlays'));
+      renderSectorList(currentTile.id);
+    }else if(btn.dataset.act==="add"){
+      openSectorPicker(sid);
+    }
+  };
 }
 
-decorTabs.addEventListener('click',e=>{
-  const b=e.target.closest('button'); if(!b) return;
-  [...decorTabs.querySelectorAll('button')].forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  renderCatalog(b.dataset.cat);
-});
+/* Попап вибору для конкретного сектора */
+const sectorModal = document.getElementById('sectorModal');
+const sectorGrid  = document.getElementById('sectorGrid');
+const sectorTitle = document.getElementById('sectorTitle');
+let activeSector  = null;
 
-btnCloseInt.onclick=()=>closeModal(interiorModal);
+function openSectorPicker(sid){
+  activeSector = sid;
+  sectorTitle.textContent = sid.toUpperCase();
+  sectorGrid.innerHTML = "";
 
-function persistInteriors(){
-  localStorage.setItem('interiors', JSON.stringify([...interiors.entries()]));
+  // зібрати всі дозволені категорії → карти предметів
+  const cats = ALLOWED[sid] || [];
+  const items = cats.flatMap(cat => (ASSETS[cat]||[]).map(x=>({...x, _cat:cat})));
+
+  items.forEach(item=>{
+    const card=document.createElement('div');
+    card.className='picker-card';
+    card.innerHTML=`<img src="${item.src}" alt="${item.title}">
+                    <div class="meta">
+                      <div>${item.title}</div>
+                      <div style="display:flex;gap:6px">
+                        <button data-act="place">Place</button>
+                        <button data-act="remove" class="danger">Del</button>
+                      </div>
+                    </div>`;
+    card.querySelector('[data-act="place"]').onclick=()=>{
+      const state = interiors.get(currentTile.id) || {};
+      state[sid] = { id:item.id, title:item.title, src:item.src, neon:!!item.neon, monitor:!!item.monitor };
+      interiors.set(currentTile.id, state);
+      persistInteriors();
+      renderInfoOverlays(currentTile.id);
+      renderTileOverlays(currentTile.id, currentWrap.querySelector('.tile-overlays'));
+      renderSectorList(currentTile.id);
+      closeModal(sectorModal);
+    };
+    card.querySelector('[data-act="remove"]').onclick=()=>{
+      const state = interiors.get(currentTile.id) || {};
+      delete state[sid];
+      interiors.set(currentTile.id, state);
+      persistInteriors();
+      renderInfoOverlays(currentTile.id);
+      renderTileOverlays(currentTile.id, currentWrap.querySelector('.tile-overlays'));
+      renderSectorList(currentTile.id);
+      closeModal(sectorModal);
+    };
+    sectorGrid.appendChild(card);
+  });
+
+  openModal(sectorModal);
 }
 
 /* -------------------- MODALS -------------------- */
