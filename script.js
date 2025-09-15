@@ -4,7 +4,7 @@
 const CURRENT_ACCOUNT = 'demo.near';
 
 // Показувати прев’ю декору прямо на сцені поверх контейнера?
-const SHOW_SCENE_PREVIEW = true;
+const SHOW_SCENE_PREVIEW = false;
 
 
 /* ===================== DEMO NFT (контейнери) ===================== */
@@ -253,14 +253,15 @@ function renderInteriorOverlays(){
     roomOverlays.appendChild(img);
   });
 
-  // 2) «плюси»: ховаємо якщо read-only або сектор зайнятий
-  [...hotspotsEl.querySelectorAll('.hotspot')].forEach(h=>{
-    const sid = h.dataset.sector;
-    h.style.display = (!interiorEditable || state[sid]) ? 'none' : 'grid';
-  });
+  // 2) «плюси»: НЕ display:none, а visibility + pointer-events
+[...hotspotsEl.querySelectorAll('.hotspot')].forEach(h=>{
+  const sid = h.dataset.sector;
+  const hidden = (!interiorEditable || state[sid]); // read-only або сектор зайнятий
+  h.style.visibility    = hidden ? 'hidden' : 'visible';
+  h.style.pointerEvents = hidden ? 'none'   : 'auto';
+  h.style.opacity       = hidden ? '0'      : '1';     // мʼяке зникнення (опційно)
+});
 
-  if (!interiorEditable) btnClearSector.disabled = true;
-}
 
 /* хот-споти → міні-пікер */
 hotspotsEl.addEventListener('click', (e)=>{
