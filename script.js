@@ -9,7 +9,7 @@ const tiles = [
 ];
 
 /* -------------------- GRID -------------------- */
-const COLS=6, MAX_ROWS=60;
+let COLS = 10, MAX_ROWS = 60;
 const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90;
 const EXTRA_TOP_ROWS=2;
 const GROUND_RATIO=0.22;
