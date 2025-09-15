@@ -8,13 +8,9 @@ const tiles = [
   { id:"cont-violet", title:"Violet Container", owner:"demo.near", src:"img/container_violet.png", number:"#0006", rarity:"Rare" }
 ];
 
-/* -------------------- GRID (адаптив) -------------------- */
-let COLS=12, MAX_ROWS=60;
-function recalcCols(){
-  const w = (scene?.clientWidth)||window.innerWidth;
-  COLS = w>=1600 ? 16 : w>=1280 ? 14 : w>=900 ? 12 : 10;
-}
-const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90, EXTRA_TOP_ROWS=2, GROUND_RATIO=0.30, BASE_OFFSET=1;
+/* -------------------- GRID (7 колонок) -------------------- */
+let COLS = 7, MAX_ROWS = 60;                 // рівно 7 у ряд
+const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90, EXTRA_TOP_ROWS=2, GROUND_RATIO=0.28, BASE_OFFSET=1;
 const GROUND_FUDGE=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-fudge'))||8;
 
 /* DOM */
@@ -31,7 +27,7 @@ function slotSize(){
   const usable = COLS + SIDE_GAP_SLOTS*2;
   const sceneW = scene.clientWidth || window.innerWidth;
   const w = Math.floor(sceneW/usable);
-  const h = Math.round(w*3/7); // 7:3
+  const h = Math.round(w*3/7);     // пропорція 7:3
   scene.style.setProperty('--slot-w', w+'px');
   scene.style.setProperty('--slot-h', h+'px');
   return {w,h};
@@ -93,19 +89,21 @@ function placeTile(x,y,tile){
   Object.assign(wrap.style,{left:left+'px',top:top+'px',width:w+'px',height:h+'px'});
   wrap.dataset.x=x; wrap.dataset.y=y;
 
-  const baseImg = `<img class="tile-img" src="${tile.src}" alt="${tile.title}">`;
-  const overlays = `<div class="tile-overlays" data-token="${tile.id}"></div>`;
-  const badge = `<div class="tile-badge">${tile.number||tile.id}</div>`;
-  wrap.innerHTML = baseImg + overlays + badge;
+  wrap.innerHTML = `
+    <img class="tile-img" src="${tile.src}" alt="${tile.title}">
+    <div class="tile-overlays" data-token="${tile.id}"></div>
+    <div class="tile-badge">${tile.number||tile.id}</div>
+  `;
 
-  wrap.onclick=()=>openInfo(tile,x,y,wrap); // відкриваємо інфо
+  // клік по ВЕСЬОМУ контейнеру
+  wrap.addEventListener('click', ()=>openInfo(tile,x,y,wrap));
 
   placed.appendChild(wrap);
   occ.set(key(x,y),{type:'tile',data:tile});
 
-  renderAll(); // оновити сцену
+  renderAll();
 
-  // відрендерити оверлеї, якщо були збережені раніше
+  // якщо є оверлеї — намалюємо
   renderTileOverlays(tile.id, wrap.querySelector('.tile-overlays'));
 }
 function unstake(x,y,wrap){
@@ -114,7 +112,7 @@ function unstake(x,y,wrap){
   renderAll();
 }
 
-/* picker (контейнери, компактна плитка) */
+/* picker (контейнери плиткою) */
 const pickerModal=document.getElementById('pickerModal');
 const pickerGrid =document.getElementById('pickerGrid');
 let pickTarget=null;
@@ -136,23 +134,46 @@ function openPicker(x,y){
   openModal(pickerModal);
 }
 
-/* -------------------- ІНФО-МОДАЛ (мінімальна версія) -------------------- */
-const infoModal = document.getElementById('infoModal');     // має бути в index.html
-const infoTitle = document.getElementById('infoTitle');
-const infoOwner = document.getElementById('infoOwner');
-const infoToken = document.getElementById('infoToken');
-const infoCoords= document.getElementById('infoCoords');
+/* -------------------- INFO -------------------- */
+const infoModal  = document.getElementById('infoModal');
+const infoImg    = document.getElementById('infoImg');
+const infoOver   = document.getElementById('infoOverlays');
+const infoTitle  = document.getElementById('infoTitle');
+const infoOwner  = document.getElementById('infoOwner');
+const infoToken  = document.getElementById('infoToken');
+const infoCoords = document.getElementById('infoCoords');
+const infoRarity = document.getElementById('infoRarity');
+const infoNumber = document.getElementById('infoNumber');
+const btnUnstake = document.getElementById('btnUnstake');
+const btnDecorate= document.getElementById('btnDecorate');
+const btnClear   = document.getElementById('btnClear');
 
 function openInfo(tile,x,y,wrap){
-  if(!infoModal){ return; } // якщо немає модалки в розмітці — тихо ігноруємо
-  if(infoTitle) infoTitle.textContent = tile.title;
-  if(infoOwner) infoOwner.textContent = tile.owner;
-  if(infoToken) infoToken.textContent = tile.id;
-  if(infoCoords) infoCoords.textContent= `${x},${y}`;
+  infoImg.src = tile.src;
+  infoTitle.textContent = tile.title;
+  infoOwner.textContent = tile.owner;
+  infoToken.textContent = tile.id;
+  infoCoords.textContent= `${x},${y}`;
+  infoRarity.textContent= tile.rarity||'Common';
+  infoNumber.textContent= tile.number||tile.id;
+
+  if(infoOver){ infoOver.innerHTML=''; renderTileOverlays(tile.id, infoOver); }
+
+  btnUnstake.onclick=()=>{
+    if(confirm('Unstake?')){ unstake(x,y,wrap); closeModal(infoModal); }
+  };
+  btnDecorate.onclick=()=>alert('Decorate: відкриємо інтер’єр у наступному кроці 😉');
+  btnClear.onclick=()=>{
+    const map=new Map(JSON.parse(localStorage.getItem('interiors_v2')||'[]'));
+    map.delete(tile.id);
+    localStorage.setItem('interiors_v2', JSON.stringify([...map.entries()]));
+    if(infoOver) infoOver.innerHTML='';
+  };
+
   openModal(infoModal);
 }
 
-/* -------------------- Оверлеї (для майбутнього інтер'єру) -------------------- */
+/* -------------------- Оверлеї (для інтер’єру) -------------------- */
 function renderTileOverlays(tokenId, container){
   if(!container) return;
   const interiors = new Map(JSON.parse(localStorage.getItem('interiors_v2')||'[]'));
@@ -177,21 +198,15 @@ function openModal(n){
 }
 function closeModal(n){
   n.setAttribute('aria-hidden','true');
-  const anyOpen = [...document.querySelectorAll('.modal')]
-    .some(m => m.getAttribute('aria-hidden')==='false');
+  const anyOpen = [...document.querySelectorAll('.modal')].some(m => m.getAttribute('aria-hidden')==='false');
   if(!anyOpen) document.body.classList.remove('modal-open');
 }
-document.querySelectorAll('[data-close]').forEach(b=>
-  b.addEventListener('click',e=>closeModal(e.target.closest('.modal')))
-);
-document.querySelectorAll('.modal').forEach(m=>
-  m.addEventListener('click',e=>{ if(e.target===m) closeModal(m); })
-);
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) closeModal(m); }));
 
 /* -------------------- INIT -------------------- */
 function renderAll(){
   ensureSceneHeight();
-  recalcCols();
   renderSlots();
   positionPlaced();
 }
@@ -216,3 +231,6 @@ setInterval(()=>{
   btnClaim.disabled=pct<100;
 },1000);
 btnClaim.onclick=()=>{ if(farmPool>=farmTarget){ alert(`Claimed ${farmTarget} N`); farmPool-=farmTarget; } };
+
+/* утиліта для ручної зміни колонок у DevTools (за бажання) */
+window.setCols = n => { COLS = Math.max(3, Math.min(12, Math.floor(n))); renderAll(); };
