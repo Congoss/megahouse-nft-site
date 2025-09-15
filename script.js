@@ -9,7 +9,7 @@ const tiles = [
 ];
 
 /* -------------------- GRID (менші тайли, адаптив) -------------------- */
-let COLS=12, MAX_ROWS=60;
+let COLS=7, MAX_ROWS=60;
 function recalcCols(){
   const w = (scene?.clientWidth)||window.innerWidth;
   COLS = w>=1600 ? 16 : w>=1280 ? 14 : w>=900 ? 12 : 10;
