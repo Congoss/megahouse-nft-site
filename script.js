@@ -1,8 +1,11 @@
 /* -------------------- DEMO NFT -------------------- */
 const tiles = [
-  {id:"bar-001", title:"Bar Container", owner:"demo.near", src:"img/bar.png", rarity:"Rare", number:"#0042"},
-  {id:"aquarium-001", title:"Aquarium", owner:"demo.near", src:"img/aquarium.png", rarity:"Epic", number:"#1177"},
-  {id:"tv-001", title:"TV Room", owner:"demo.near", src:"img/tv.png", rarity:"Uncommon", number:"#0890"}
+  { id:"cont-blue",   title:"Blue Container",   owner:"demo.near", src:"img/container_blue.png",   rarity:"Common",   number:"#0001" },
+  { id:"cont-brown",  title:"Brown Container",  owner:"demo.near", src:"img/container_brown.png",  rarity:"Uncommon", number:"#0002" },
+  { id:"cont-gold",   title:"Gold Container",   owner:"demo.near", src:"img/container_gold.png",   rarity:"Epic",     number:"#0003" },
+  { id:"cont-gray",   title:"Gray Container",   owner:"demo.near", src:"img/container_gray.png",   rarity:"Common",   number:"#0004" },
+  { id:"cont-orange", title:"Orange Container", owner:"demo.near", src:"img/container_orange.png", rarity:"Rare",     number:"#0005" },
+  { id:"cont-violet", title:"Violet Container", owner:"demo.near", src:"img/container_violet.png", rarity:"Rare",     number:"#0006" }
 ];
 
 /* -------------------- GRID -------------------- */
