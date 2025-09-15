@@ -9,7 +9,7 @@
   --card-stroke:rgba(0,0,0,.25);
   --pill-shadow:0 6px 14px rgba(0,0,0,.28);
 
-  --slot-w:400px; --slot-h:300px; --side-gap-slots:0.5;
+  --slot-w:700px; --slot-h:300px; --side-gap-slots:0.5;
   --top-safe:90px; --ground-ratio:0.22; --ground-fudge:8px;
 }
 
