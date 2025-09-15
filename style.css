@@ -33,11 +33,12 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
 .farm-top__claim{border:none;border-radius:18px;padding:6px 10px;background:var(--accent2);color:#1a0a00;font-weight:800;cursor:pointer}
 
 /* scene */
-#scene{position:relative;min-height:100vh;padding-top:56px;background:url("img/background1.png") no-repeat center bottom/cover}
+#scene{position:relative;min-height:100vh;padding-top:56px;
+       background:url("img/background1.png") no-repeat center bottom/cover}
 
 /* layers: слоти під контейнерами, але клікабельні; контейнери ще вище */
-#slots {position:absolute;inset:0;z-index:2000; pointer-events:auto;}
-#placed{position:absolute;inset:0;z-index:2500; pointer-events:auto;}
+#slots  {position:absolute;inset:0;z-index:2000; pointer-events:auto;} 
+#placed {position:absolute;inset:0;z-index:1500; pointer-events:none;}
 
 /* slots */
 .slot{
@@ -53,7 +54,7 @@ body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;backg
 .tile-wrap{
   position:absolute;width:var(--slot-w);height:var(--slot-h);
   border-radius:0;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.45);
-  pointer-events:auto;
+  pointer-events:auto; z-index:2500;   /* ставимо вище за плюси */
 }
 .tile-img{width:100%;height:100%;object-fit:cover;display:block}
 .tile-badge{position:absolute;left:8px;bottom:6px;padding:4px 8px;background:rgba(0,0,0,.55);border-radius:8px;font-size:12px;pointer-events:none;}
