@@ -176,13 +176,14 @@ const SECTOR_CATEGORIES = {
 
 /* каталог активів (thumb 1:1 у меню, src — повний 7:3 у сам контейнер) */
 const ASSETS = {
-  poster:  [{id:'poster-near',     title:'Poster NEAR',     src:'img/decor/poster near.png'}],
-  neon:    [{id:'neon-hodl',       title:'Neon HODL',       src:'img/decor/neon hodl.png', neon:true}],
-  monitor: [{id:'monitor',         title:'Wall Monitor',    src:'img/decor/monitor.png',   monitor:true}],
-  pet:     [{id:'dog',             title:'Shiba Doge',      src:'img/decor/dog.png'}],
-  sofa:    [{id:'hot-sofa-ledger', title:'Hot Wallet Sofa', src:'img/decor/hot sofa ledger.png'}],
-  rig:     [{id:'rig1',            title:'Rig x1',          src:'img/decor/rig1.png'}],
+  poster:  [{ id:'poster-near',     title:'Poster NEAR',     src:'img/decor/poster near.png',     thumb:'img/icons/poster_near.png' }],
+  neon:    [{ id:'neon-hodl',       title:'Neon HODL',       src:'img/decor/neon hodl.png',       thumb:'img/icons/neon_hodl.png', neon:true }],
+  monitor: [{ id:'monitor',         title:'Wall Monitor',    src:'img/decor/monitor.png',         thumb:'img/icons/monitor.png',   monitor:true }],
+  pet:     [{ id:'dog',             title:'Shiba Doge',      src:'img/decor/dog.png',             thumb:'img/icons/dog.png' }],
+  sofa:    [{ id:'hot-sofa-ledger', title:'Hot Wallet Sofa', src:'img/decor/hot sofa ledger.png', thumb:'img/icons/sofa.png' }],
+  rig:     [{ id:'rig1',            title:'Rig x1',          src:'img/decor/rig1.png',            thumb:'img/icons/rig1.png' }],
 };
+
 
 /* state у localStorage */
 function loadInteriors(){
@@ -250,6 +251,14 @@ function renderInteriorOverlays(){
     }
     roomOverlays.appendChild(img);
   });
+function deriveThumb(src){
+  try {
+    const file = src.split('/').pop().replace(/\s+/g, '_'); // "neon hodl.png" -> "neon_hodl.png"
+    return 'img/icons/' + file;
+  } catch { 
+    return src;
+  }
+}
 
   // хот-споти «+»: приховуємо зайняті/чужі БЕЗ зсуву
   if (hotspotsEl) {
@@ -293,14 +302,22 @@ function openSectorPicker(cat){
   if (!interiorEditable || !sectorGrid || !sectorPicker) return;
   if (sectorTitle) sectorTitle.textContent = 'Вибір: ' + cat;
   sectorGrid.innerHTML='';
+
   (ASSETS[cat]||[]).forEach(item=>{
+    const thumbUrl = item.thumb || deriveThumb(item.src);
+
     const card=document.createElement('div');
     card.className='picker-card';
     card.innerHTML=`
       <div class="thumb" style="width:100%;aspect-ratio:1/1;display:grid;place-items:center;background:#0c1014;border-bottom:1px solid rgba(255,255,255,.08)">
-        <img src="${item.thumb || item.src}" alt="${item.title}" style="max-width:80%;max-height:80%;object-fit:contain;display:block">
+        <img alt="${item.title}" style="max-width:80%;max-height:80%;object-fit:contain;display:block">
       </div>
       <div class="meta"><div>${item.title}</div><button>Place</button></div>`;
+
+    const imgEl = card.querySelector('img');
+    imgEl.src = thumbUrl;
+    imgEl.onerror = () => { imgEl.src = item.src; }; // якщо іконка відсутня — підставимо повний оверлей
+
     card.querySelector('button').onclick=()=>{
       const m = loadInteriors();
       const s = m.get(currentTokenId) || {};
@@ -311,8 +328,10 @@ function openSectorPicker(cat){
     };
     sectorGrid.appendChild(card);
   });
+
   openModal(sectorPicker);
 }
+    
 
 /* прев’ю на сцені */
 function renderTileOverlays(tokenId, container){
