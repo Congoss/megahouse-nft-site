@@ -9,7 +9,7 @@ const tiles = [
 ];
 
 /* --- Сцена --- */
-let COLS=10, MAX_ROWS=60;
+let COLS=7, MAX_ROWS=60;
 const scene=document.getElementById('scene');
 const slots=document.getElementById('slots');
 const placed=document.getElementById('placed');
@@ -198,7 +198,11 @@ function closeModal(m){ m.setAttribute('aria-hidden','true'); const any=[...docu
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.closest('.modal')));
 
 /* --- Init --- */
-function renderAll(){ ensureSceneHeight(); renderSlots(); positionPlaced(); }
+function renderAll(){
+  ensureSceneHeight();
+  renderSlots();
+  positionPlaced();
+}
 window.addEventListener('resize',renderAll);
 document.addEventListener('DOMContentLoaded',()=>{ renderAll(); requestAnimationFrame(renderAll); });
 
