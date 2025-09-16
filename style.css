@@ -1,71 +1,399 @@
-:root {
-  --bg:#0b0d10; --text:#eaeef2;
-  --slot-w:400px; --slot-h:300px; --ground-fudge:8px;
-  --accent:#FFB47F; --accent2:#FFD180; --bar:#546A63;
+/* ===================== CONFIG ===================== */
+const CURRENT_ACCOUNT = 'demo.near';      // заміниш на акаунт з гаманця
+const SHOW_SCENE_PREVIEW = false;         // не малюємо декор на закритому контейнері
+
+/* ===================== DEMO NFT ===================== */
+const tiles = [
+  { id:"cont-blue",   title:"Blue Container",   owner:"demo.near", src:"img/container_blue.png",   number:"#0001", rarity:"Common" },
+  { id:"cont-brown",  title:"Brown Container",  owner:"demo.near", src:"img/container_brown.png",  number:"#0002", rarity:"Uncommon" },
+  { id:"cont-gold",   title:"Gold Container",   owner:"demo.near", src:"img/container_gold.png",   number:"#0003", rarity:"Epic" },
+  { id:"cont-gray",   title:"Gray Container",   owner:"demo.near", src:"img/container_gray.png",   number:"#0004", rarity:"Common" },
+  { id:"cont-orange", title:"Orange Container", owner:"demo.near", src:"img/container_orange.png", number:"#0005", rarity:"Rare" },
+  { id:"cont-violet", title:"Violet Container", owner:"demo.near", src:"img/container_violet.png", number:"#0006", rarity:"Rare" }
+];
+
+/* ===================== GRID (7 колонок, 7:3) ===================== */
+let COLS = 7;                   // ← фіксуємо 7 у ряд
+const MAX_ROWS = 60;
+
+const BURY=0.5, SIDE_GAP_SLOTS=0.5, TOP_SAFE=90, EXTRA_TOP_ROWS=2, GROUND_RATIO=0.28, BASE_OFFSET=1;
+const GROUND_FUDGE=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-fudge'))||8;
+
+/* DOM */
+const scene  = document.getElementById('scene');
+const slots  = document.getElementById('slots');
+const placed = document.getElementById('placed');
+
+/* OCC */
+const occ=new Map();
+const key=(x,y)=>`${x},${y}`;
+
+/* geometry */
+function slotSize(){
+  const usable = COLS + SIDE_GAP_SLOTS*2;
+  const sceneW = scene.clientWidth || window.innerWidth;
+  const w = Math.floor(sceneW/usable);
+  const h = Math.round(w*3/7);           // 7:3
+  scene.style.setProperty('--slot-w', w+'px');
+  scene.style.setProperty('--slot-h', h+'px');
+  return {w,h};
+}
+function getMaxY(){ let m=0; for(const k of occ.keys()){ const gy=+k.split(',')[1]; if(gy>m) m=gy; } return m; }
+function groundY(H,h){ return H - h*GROUND_RATIO; }
+function ensureSceneHeight(){
+  const {h}=slotSize();
+  const needH=Math.ceil((TOP_SAFE + h*(1 - BURY + getMaxY() + EXTRA_TOP_ROWS)) / ((1-GROUND_RATIO)||0.78));
+  scene.style.minHeight=Math.max(window.innerHeight,needH)+'px';
+}
+function cellToPx(x,y,w,h){
+  const gy=groundY(scene.clientHeight||window.innerHeight,h);
+  const baseTop=gy - h*(1-BURY) - h*BASE_OFFSET + GROUND_FUDGE;
+  const totalW=(COLS + SIDE_GAP_SLOTS*2)*w;
+  const left0=(scene.clientWidth-totalW)/2 + SIDE_GAP_SLOTS*w;
+  return { left:left0 + x*w, top: baseTop - y*h };
+}
+function available(x,y){
+  if(occ.has(key(x,y))) return false;
+  return y===0 || occ.has(key(x,y-1));
 }
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+/* render */
+function positionPlaced(){
+  const {w,h}=slotSize();
+  Array.from(placed.children).forEach(el=>{
+    const gx=+el.dataset.x, gy=+el.dataset.y;
+    if(Number.isFinite(gx)&&Number.isFinite(gy)){
+      const {left,top}=cellToPx(gx,gy,w,h);
+      Object.assign(el.style,{left:left+'px',top:top+'px',width:w+'px',height:h+'px'});
+    }
+  });
+}
+function renderSlots(){
+  slots.innerHTML='';
+  const {w,h}=slotSize();
+  for(let y=0;y<MAX_ROWS;y++){
+    for(let x=0;x<COLS;x++){
+      if(!available(x,y)) continue;
+      const {left,top}=cellToPx(x,y,w,h);
+      const s=document.createElement('div');
+      s.className='slot';
+      s.style.left=left+'px';
+      s.style.top =top +'px';
+      s.style.width=w+'px';
+      s.style.height=h+'px';
+      s.onclick=()=>openPicker(x,y);
+      slots.appendChild(s);
+    }
+  }
+}
 
-/* --- Топ --- */
-.top-ui{position:fixed;inset:0 0 auto 0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;z-index:1000;background:rgba(0,0,0,.25);backdrop-filter:blur(6px)}
-.logo{font-weight:900}
-.top-center{display:flex;align-items:center;gap:12px}
-.top-right{display:flex;align-items:center;gap:10px}
-.icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;cursor:pointer}
-.connect-btn{background:linear-gradient(90deg,#ffaf00,#ff7a00);color:#1a0a00;border:none;border-radius:12px;padding:8px 14px;font-weight:800;cursor:pointer}
+/* place/unstake */
+function placeTile(x,y,tile){
+  const {w,h}=slotSize();
+  const {left,top}=cellToPx(x,y,w,h);
 
-/* --- Баланси --- */
-.wallet-cards{display:flex;gap:8px}
-.wallet-card{height:36px;min-width:170px;display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#2a2f36}
-.wc-icon{width:26px;height:26px;display:grid;place-items:center;color:#f7c66b}
-.wc-icon.wc-n{color:#ff9d6e}
-.wc-text{line-height:1.1}.wc-label{font-size:11px;opacity:.8}.wc-value{font-weight:900}
+  const wrap=document.createElement('div');
+  wrap.className='tile-wrap';
+  Object.assign(wrap.style,{left:left+'px',top:top+'px',width:w+'px',height:h+'px'});
+  wrap.dataset.x=x; wrap.dataset.y=y;
 
-/* --- Farm --- */
-.farm-top{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:18px;background:var(--accent);border:1px solid rgba(0,0,0,.25)}
-.farm-top__label{font-weight:800;color:#222}
-.farm-top__bar{width:280px;height:12px;border-radius:999px;background:var(--bar);overflow:hidden;position:relative}
-.farm-top__fill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--accent2)}
-.farm-top__amount{font-weight:900;color:#222}
-.farm-top__claim{border:none;border-radius:18px;padding:6px 10px;background:var(--accent2);color:#1a0a00;font-weight:800;cursor:pointer}
+  wrap.innerHTML = `
+    <img class="tile-img" src="${tile.src}" alt="${tile.title}">
+    <div class="tile-overlays" data-token="${tile.id}"></div>
+    <div class="tile-badge">${tile.number||tile.id}</div>
+  `;
 
-/* --- Сцена --- */
-#scene{position:relative;min-height:100vh;padding-top:56px;background:url("img/background1.png") no-repeat center bottom/cover}
-#slots{position:absolute;inset:0;z-index:1000;pointer-events:auto;}
-#placed{position:absolute;inset:0;z-index:1001;pointer-events:auto;}
+  // клік по контейнеру → інтерʼєр (зупиняємо спливання, щоб не проклікало «плюс»)
+  wrap.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    openInterior(tile, x, y);
+  });
 
-.slot{position:absolute;width:var(--slot-w);height:var(--slot-h);border:2px dashed rgba(255,255,255,.35);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.slot::after{content:"+";font-size:28px;color:#fff}
-.tile-wrap{position:absolute;width:var(--slot-w);height:var(--slot-h);box-shadow:0 6px 16px rgba(0,0,0,.45);pointer-events:auto;}
-.tile-img{width:100%;height:100%;object-fit:cover;display:block}
-.tile-badge{position:absolute;left:8px;bottom:6px;padding:4px 8px;background:rgba(0,0,0,.55);border-radius:8px;font-size:12px;color:#fff}
+  placed.appendChild(wrap);
+  occ.set(key(x,y),{type:'tile',data:tile});
 
-/* --- Модалки --- */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:2000}
-.modal[aria-hidden="false"]{display:flex}
-.modal::before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
-.modal__dialog{position:relative;z-index:1;width:min(880px,92vw);max-height:86vh;overflow:auto;background:#0c1014;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px}
-.modal__dialog.small{width:min(720px,92vw)}
-.modal__dialog.wide{width:min(1100px,94vw)}
-.modal__close{position:absolute;right:10px;top:8px;border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer}
+  renderAll();
+  renderTileOverlays(tile.id, wrap.querySelector('.tile-overlays'));
+}
+function unstake(x,y,wrap){
+  wrap.remove();
+  occ.delete(key(x,y));
+  renderAll();
+}
 
-/* --- Пікери --- */
-.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.picker-card{background:#10151b;border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
-.picker-card img{display:block;width:100%;aspect-ratio:7/3;object-fit:contain;background:#0c1014}
-.picker-card .meta{display:flex;align-items:center;justify-content:space-between;padding:6px 8px}
-.picker-card button{border:none;background:var(--accent2);color:#1a0a00;font-weight:800;border-radius:8px;padding:6px 8px;cursor:pointer}
+/* ===================== Picker контейнерів ===================== */
+const pickerModal=document.getElementById('pickerModal');
+const pickerGrid =document.getElementById('pickerGrid');
+let pickTarget=null;
 
-/* --- Інтер’єр --- */
-.room{position:relative;width:100%;aspect-ratio:7/3;background:#0d1318;border-radius:8px;overflow:hidden}
-.room img.bg{width:100%;height:100%;object-fit:cover;display:block}
-.room-overlays{position:absolute;inset:0;z-index:2}
-.hotspots{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);z-index:3}
-.hotspot{place-self:center;width:32px;height:32px;border-radius:50%;border:1px dashed rgba(255,255,255,.6);background:rgba(255,255,255,.2);color:#fff;font-weight:900;display:grid;place-items:center;cursor:pointer}
-.hotspot.hidden{visibility:hidden;opacity:0}
+function openPicker(x,y){
+  pickTarget={x,y};
+  pickerGrid.innerHTML='';
+  tiles.forEach(t=>{
+    const card=document.createElement('div');
+    card.className='picker-card';
+    card.innerHTML=`<img src="${t.src}" alt="${t.title}">
+                    <div class="meta"><div>${t.title}</div><button>Place</button></div>`;
+    card.querySelector('button').onclick=()=>{
+      placeTile(pickTarget.x,pickTarget.y,t);
+      closeModal(pickerModal);
+    };
+    pickerGrid.appendChild(card);
+  });
+  openModal(pickerModal);
+}
 
-/* --- Міні-пікер сектору --- */
-#sectorPicker .picker-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
-#sectorPicker .picker-card img{aspect-ratio:1/1;object-fit:contain}
+/* ===================== Інтер’єр (6 секторів) ===================== */
+// Підтримка двох назв id з різних версій верстки
+const roomBg        = document.getElementById('roomBg') || document.getElementById('interiorBg');
+const roomOverlays  = document.getElementById('roomOverlays');
+const hotspotsEl    = document.getElementById('hotspots');
+
+const intTitle      = document.getElementById('intTitle') || { textContent: '' };
+const intOwner      = document.getElementById('intOwner') || { textContent: '' };
+const intToken      = document.getElementById('intToken') || { textContent: '' };
+const intCoords     = document.getElementById('intCoords') || { textContent: '' };
+
+const btnClearSector= document.getElementById('btnClearSector');
+const btnClearAll   = document.getElementById('btnClearAll');
+const btnCloseInt   = document.getElementById('btnCloseInterior');
+
+let currentTokenId = null;
+let currentSector  = null;
+let interiorEditable = false;
+
+/* сектор → категорія */
+const SECTOR_CATEGORIES = {
+  s1:'poster', s2:'neon', s3:'monitor',
+  s4:'pet',    s5:'sofa', s6:'rig'
+};
+
+/* каталог активів (thumb для меню, src — повний 7:3) */
+const ASSETS = {
+  poster:  [{id:'poster-near',     title:'Poster NEAR',     src:'img/decor/poster near.png',     thumb:'img/icons/poster_near.png'}],
+  neon:    [{id:'neon-hodl',       title:'Neon HODL',       src:'img/decor/neon hodl.png',       thumb:'img/icons/neon_hodl.png', neon:true}],
+  monitor: [{id:'monitor',         title:'Wall Monitor',    src:'img/decor/monitor.png',         thumb:'img/icons/monitor.png',   monitor:true}],
+  pet:     [{id:'dog',             title:'Shiba Doge',      src:'img/decor/dog.png',             thumb:'img/icons/dog.png'}],
+  sofa:    [{id:'hot-sofa-ledger', title:'Hot Wallet Sofa', src:'img/decor/hot sofa ledger.png', thumb:'img/icons/sofa.png'}],
+  rig:     [{id:'rig1',            title:'Rig x1',          src:'img/decor/rig1.png',            thumb:'img/icons/rig1.png'}],
+};
+
+/* state у localStorage (сумісність із попер. ключами) */
+function loadInteriors(){
+  const rawV4 = localStorage.getItem('interiors_v4');
+  if (rawV4) return new Map(JSON.parse(rawV4));
+  const rawV3 = localStorage.getItem('interiors_v3');
+  if (rawV3) return new Map(JSON.parse(rawV3));
+  const raw   = localStorage.getItem('interiors');
+  return raw ? new Map(JSON.parse(raw)) : new Map();
+}
+function saveInteriors(map){
+  localStorage.setItem('interiors_v4', JSON.stringify([...map.entries()]));
+}
+
+function openInterior(tile, x, y){
+  currentTokenId = tile.id;
+  currentSector  = null;
+
+  // редагувати може тільки власник
+  interiorEditable = (tile.owner === CURRENT_ACCOUNT);
+
+  // мета-дані (якщо є поля в DOM — заповнимо)
+  intTitle.textContent  = tile.title ?? '';
+  intOwner.textContent  = tile.owner ?? '';
+  intToken.textContent  = tile.id ?? '';
+  intCoords.textContent = `${x},${y}`;
+
+  // фон інтерʼєру (за бажанням можеш підміняти за кольором контейнера)
+  if (roomBg) roomBg.src = 'img/decor/container_orange_in.png';
+
+  // доступність елементів
+  if (btnClearSector) btnClearSector.disabled = !interiorEditable;
+  if (btnClearAll)    btnClearAll.disabled    = !interiorEditable;
+  if (hotspotsEl)     hotspotsEl.style.pointerEvents = interiorEditable ? 'auto' : 'none';
+
+  const interiorModal = document.getElementById('interiorModal');
+  const hint = interiorModal?.querySelector('.small');
+  if (hint) hint.textContent = interiorEditable
+    ? 'Клік по вже розміщеному предмету — прибирає його.'
+    : 'Перегляд (без змін).';
+
+  renderInteriorOverlays();
+  openModal(interiorModal);
+}
+
+function renderInteriorOverlays(){
+  const interiors = loadInteriors();
+  const state = interiors.get(currentTokenId) || {};
+  roomOverlays.innerHTML = '';
+
+  // 1) предмети (повний 7:3 шар)
+  Object.keys(SECTOR_CATEGORIES).forEach(sid=>{
+    const it = state[sid];
+    if(!it) return;
+    const img=document.createElement('img');
+    img.src = it.src;
+    if(it.neon)    img.classList.add('neon-glow');
+    if(it.monitor) img.classList.add('monitor-fx');
+
+    if (interiorEditable) {
+      img.title='Клік — прибрати';
+      img.style.cursor='pointer';
+      img.onclick=()=>{ 
+        delete state[sid];
+        const m=loadInteriors(); m.set(currentTokenId,state); saveInteriors(m);
+        renderInteriorOverlays(); 
+      };
+    } else {
+      img.title=''; img.onclick=null; img.style.cursor='default';
+    }
+    roomOverlays.appendChild(img);
+  });
+
+  // 2) хот-споти «+»: приховуємо зайняті/чужі БЕЗ зсуву (visibility)
+  if (hotspotsEl) {
+    hotspotsEl.innerHTML = '';
+    ['s1','s2','s3','s4','s5','s6'].forEach(sid=>{
+      const b=document.createElement('button');
+      b.className='hotspot';
+      b.textContent='+';
+      b.dataset.sector=sid;
+
+      const hidden = (!interiorEditable || state[sid]);
+      b.style.visibility    = hidden ? 'hidden' : 'visible';
+      b.style.pointerEvents = hidden ? 'none'   : 'auto';
+      b.style.opacity       = hidden ? '0'      : '1';
+
+      if (!hidden) {
+        b.onclick=()=>{
+          currentSector = sid;
+          if (btnClearSector) btnClearSector.disabled = false;
+          openSectorPicker(SECTOR_CATEGORIES[currentSector]);
+        };
+      }
+      hotspotsEl.appendChild(b);
+    });
+  }
+
+  if (!interiorEditable && btnClearSector) btnClearSector.disabled = true;
+
+  // оновимо прев’ю на сцені (якщо включено)
+  const wrap = [...document.querySelectorAll('.tile-overlays[data-token]')]
+    .find(d => d.getAttribute('data-token') === currentTokenId);
+  renderTileOverlays(currentTokenId, wrap);
+}
+
+/* міні-пікер сектору (іконки-Thumb) */
+const sectorPicker = document.getElementById('sectorPicker');
+const sectorTitle  = document.getElementById('sectorTitle') || document.getElementById('sectorPickerTitle');
+const sectorGrid   = document.getElementById('sectorGrid');
+
+function openSectorPicker(cat){
+  if (!interiorEditable) return;
+  if (sectorTitle) sectorTitle.textContent = 'Вибір: ' + cat;
+  sectorGrid.innerHTML='';
+  (ASSETS[cat]||[]).forEach(item=>{
+    const card=document.createElement('div');
+    card.className='picker-card';
+    card.innerHTML=`
+      <div class="thumb" style="width:100%;aspect-ratio:1/1;display:grid;place-items:center;background:#0c1014;border-bottom:1px solid rgba(255,255,255,.08)">
+        <img src="${item.thumb || item.src}" alt="${item.title}" style="max-width:80%;max-height:80%;object-fit:contain;display:block">
+      </div>
+      <div class="meta"><div>${item.title}</div><button>Place</button></div>`;
+    card.querySelector('button').onclick=()=>{
+      const m = loadInteriors();
+      const s = m.get(currentTokenId) || {};
+      s[currentSector] = {id:item.id,title:item.title,src:item.src,neon:!!item.neon,monitor:!!item.monitor};
+      m.set(currentTokenId, s); saveInteriors(m);
+      renderInteriorOverlays();      // «+» у секторі зникне
+      closeModal(sectorPicker);
+    };
+    sectorGrid.appendChild(card);
+  });
+  openModal(sectorPicker);
+}
+
+/* прев’ю на сцені (можна вимкнути SHOW_SCENE_PREVIEW) */
+function renderTileOverlays(tokenId, container){
+  if(!container || !SHOW_SCENE_PREVIEW) return;
+  const map = loadInteriors();
+  const state = map.get(tokenId) || {};
+  container.innerHTML="";
+  Object.values(state).forEach(it=>{
+    const img=document.createElement('img');
+    img.src = it.src;
+    if(it.neon)    img.classList.add('neon-glow');
+    if(it.monitor) img.classList.add('monitor-fx');
+    container.appendChild(img);
+  });
+}
+
+/* кнопки інтерʼєру */
+if (btnClearSector) btnClearSector.onclick=()=>{
+  if(!interiorEditable || !currentSector) return;
+  const m = loadInteriors();
+  const s = m.get(currentTokenId) || {};
+  delete s[currentSector];
+  m.set(currentTokenId, s); saveInteriors(m);
+  renderInteriorOverlays();
+  btnClearSector.disabled = true;
+};
+if (btnClearAll) btnClearAll.onclick=()=>{
+  if(!interiorEditable) return;
+  const m = loadInteriors();
+  m.delete(currentTokenId); saveInteriors(m);
+  renderInteriorOverlays();
+};
+if (btnCloseInt) btnCloseInt.onclick=()=>{
+  const interiorModal = document.getElementById('interiorModal');
+  closeModal(interiorModal);
+};
+
+/* ===================== MODALS ===================== */
+function openModal(n){
+  if (!n) return;
+  n.setAttribute('aria-hidden','false');
+  document.body.classList.add('modal-open');
+}
+function closeModal(n){
+  if (!n) return;
+  n.setAttribute('aria-hidden','true');
+  const anyOpen = [...document.querySelectorAll('.modal')].some(m => m.getAttribute('aria-hidden')==='false');
+  if(!anyOpen) document.body.classList.remove('modal-open');
+}
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) closeModal(m); }));
+
+/* ===================== INIT ===================== */
+function renderAll(){
+  ensureSceneHeight();
+  renderSlots();
+  positionPlaced();
+}
+window.addEventListener('resize', renderAll);
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderAll();
+  requestAnimationFrame(renderAll); // другий прохід — стабілізує позиції
+});
+
+/* ===================== DEMО: Баланси + Фарм ===================== */
+const nearValue=document.getElementById('nearValue');
+const nValue   =document.getElementById('nValue');
+let near=0.011, nTok=0.11;
+setInterval(()=>{ if(nearValue){near+=0.001; nearValue.textContent=near.toFixed(3);} if(nValue){nTok+=0.01; nValue.textContent=nTok.toFixed(2);} },1500);
+
+let farmPool=0, farmTarget=20;
+const farmFill   = document.getElementById('farmFill');
+const farmAmount = document.getElementById('farmAmount');
+const btnClaim   = document.getElementById('btnClaim');
+setInterval(()=>{
+  farmPool+=0.04;
+  const pct=Math.min(100, Math.round((farmPool/farmTarget)*100));
+  if (farmFill)   farmFill.style.width=pct+'%';
+  if (farmAmount) farmAmount.textContent=farmPool.toFixed(2)+' N';
+  if (btnClaim)   btnClaim.disabled=pct<100;
+},1000);
+if (btnClaim) btnClaim.onclick=()=>{ if(farmPool>=farmTarget){ alert(`Claimed ${farmTarget} N`); farmPool-=farmTarget; } };
+
+/* зручно міняти колонки з консолі (за потреби) */
+window.setCols = n => { COLS = Math.max(3, Math.min(12, Math.floor(n))); renderAll(); };
