@@ -295,7 +295,7 @@ function deriveThumb(src){
 
 /* міні-пікер сектору (іконки 1:1) */
 const sectorPicker = document.getElementById('sectorPicker');
-const sectorTitle  = document.getElementById('sectorTitle');
+const sectorTitle  = document.getElementById('sectorPickerTitle');
 const sectorGrid   = document.getElementById('sectorGrid');
 
 function openSectorPicker(cat){
