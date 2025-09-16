@@ -13,29 +13,12 @@
     <div class="top-center">
       <div class="wallet-cards">
         <div class="wallet-card" id="card-near">
-          <div class="wc-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
-              <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
-              <path d="M9 9h6v6H9z" fill="currentColor"/>
-            </svg>
-          </div>
-          <div class="wc-text">
-            <div class="wc-label">NEAR</div>
-            <div class="wc-value" id="nearValue">0.000</div>
-          </div>
+          <div class="wc-icon">◎</div>
+          <div class="wc-text"><div class="wc-label">NEAR</div><div class="wc-value" id="nearValue">0.000</div></div>
         </div>
         <div class="wallet-card" id="card-n">
-          <div class="wc-icon wc-n">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
-              <path d="M7 16V8l10 8V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="wc-text">
-            <div class="wc-label">N token</div>
-            <div class="wc-value" id="nValue">0.00</div>
-          </div>
+          <div class="wc-icon wc-n">N</div>
+          <div class="wc-text"><div class="wc-label">N token</div><div class="wc-value" id="nValue">0.00</div></div>
         </div>
       </div>
 
@@ -48,9 +31,9 @@
     </div>
 
     <div class="top-right">
-      <button class="icon-btn" title="Чекін">✅</button>
-      <button class="icon-btn" title="Ачівки">🏆</button>
-      <button class="icon-btn" title="Профіль">👤</button>
+      <button class="icon-btn">✅</button>
+      <button class="icon-btn">🏆</button>
+      <button class="icon-btn">👤</button>
       <button class="connect-btn">Connect Wallet</button>
     </div>
   </header>
@@ -60,7 +43,7 @@
     <div id="placed"></div>
   </main>
 
-  <!-- Пікер для встановлення контейнерів у слот -->
+  <!-- Пікер контейнерів -->
   <div class="modal" id="pickerModal" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
@@ -69,47 +52,36 @@
     </div>
   </div>
 
-  <!-- Інтер’єр контейнера (6 секторів) -->
+  <!-- Інтер’єр -->
   <div class="modal" id="interiorModal" aria-hidden="true">
     <div class="modal__dialog wide">
       <button class="modal__close" data-close>×</button>
       <div class="interior">
-        <div class="room">
-          <img class="room-bg" id="roomBg" src="img/decor/container_orange_in.png" alt="inside">
-          <div class="room-overlays" id="roomOverlays"></div>
-
-          <!-- Сітка 3×2 хот-спотів -->
-          <div class="hotspots" id="hotspots">
-            <button data-sector="s1" class="hotspot">+</button>
-            <button data-sector="s2" class="hotspot">+</button>
-            <button data-sector="s3" class="hotspot">+</button>
-            <button data-sector="s4" class="hotspot">+</button>
-            <button data-sector="s5" class="hotspot">+</button>
-            <button data-sector="s6" class="hotspot">+</button>
+        <div class="interior-left">
+          <div class="room">
+            <img class="bg" id="interiorBg" src="img/decor/container_orange_in.png" alt="">
+            <div class="room-overlays" id="roomOverlays"></div>
+            <div class="hotspots" id="hotspots"></div>
           </div>
         </div>
-
-        <div class="interior-meta">
-          <h3 id="intTitle">Container</h3>
-          <div class="kv"><span>Owner</span><b id="intOwner">demo.near</b></div>
-          <div class="kv"><span>Token ID</span><b id="intToken">cont-1</b></div>
-          <div class="kv"><span>Coords</span><b id="intCoords">0,0</b></div>
-          <div class="interior-actions">
-            <button id="btnClearSector" class="danger" disabled>Clear sector</button>
-            <button id="btnClearAll" disabled>Clear all</button>
+        <div class="interior-right">
+          <h3 id="intTitle">Container interior</h3>
+          <div class="int-info" id="intInfo"></div>
+          <div class="int-actions">
+            <button id="btnClearSector" class="danger">Clear sector</button>
+            <button id="btnClearAll">Clear all</button>
             <button id="btnCloseInterior" class="primary">Готово</button>
           </div>
-          <div class="small">Клік по вже розміщеному предмету — прибирає його.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Міні-пікер для конкретного сектору -->
+  <!-- Міні-пікер сектору -->
   <div class="modal" id="sectorPicker" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
-      <h3 class="modal__title" id="sectorTitle">Вибір декору</h3>
+      <h3 class="modal__title" id="sectorPickerTitle">Вибір</h3>
       <div class="picker-grid" id="sectorGrid"></div>
     </div>
   </div>
