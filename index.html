@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>MEGAHOUSE</title>
 
-  <!-- Фікс 404 іконки (можна не тримати файл) -->
+  <!-- не ловимо 404 на фавікон -->
   <link rel="icon" href="data:,">
 
-  <!-- ПРАВИЛЬНЕ підключення стилів -->
-  <link rel="stylesheet" href="./style.css?v=5">
+  <link rel="stylesheet" href="./style.css?v=6">
 </head>
 
 <body>
+  <!-- Top bar -->
   <header class="top-ui">
     <div class="logo">MEGAHOUSE</div>
 
@@ -20,11 +20,18 @@
       <div class="wallet-cards">
         <div class="wallet-card" id="card-near">
           <div class="wc-icon">◎</div>
-          <div class="wc-text"><div class="wc-label">NEAR</div><div class="wc-value" id="nearValue">0.000</div></div>
+          <div class="wc-text">
+            <div class="wc-label">NEAR</div>
+            <div class="wc-value" id="nearValue">0.000</div>
+          </div>
         </div>
+
         <div class="wallet-card" id="card-n">
           <div class="wc-icon wc-n">N</div>
-          <div class="wc-text"><div class="wc-label">N token</div><div class="wc-value" id="nValue">0.00</div></div>
+          <div class="wc-text">
+            <div class="wc-label">N token</div>
+            <div class="wc-value" id="nValue">0.00</div>
+          </div>
         </div>
       </div>
 
@@ -37,19 +44,20 @@
     </div>
 
     <div class="top-right">
-      <button class="icon-btn">✅</button>
-      <button class="icon-btn">🏆</button>
-      <button class="icon-btn">👤</button>
+      <button class="icon-btn" title="Чекін">✅</button>
+      <button class="icon-btn" title="Ачівки">🏆</button>
+      <button class="icon-btn" title="Профіль">👤</button>
       <button class="connect-btn">Connect Wallet</button>
     </div>
   </header>
 
+  <!-- Scene -->
   <main id="scene">
-  <div id="slots"></div>   <!-- сюди рендеряться “плюси” -->
-  <div id="placed"></div>  <!-- сюди рендеряться контейнери -->
-</main>
+    <div id="slots"></div>
+    <div id="placed"></div>
+  </main>
 
-  <!-- Пікер контейнерів -->
+  <!-- Container picker -->
   <div class="modal" id="pickerModal" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
@@ -58,7 +66,7 @@
     </div>
   </div>
 
-  <!-- Інтер’єр -->
+  <!-- Interior -->
   <div class="modal" id="interiorModal" aria-hidden="true">
     <div class="modal__dialog wide">
       <button class="modal__close" data-close>×</button>
@@ -70,30 +78,34 @@
             <div class="hotspots" id="hotspots"></div>
           </div>
         </div>
+
         <div class="interior-right">
-          <h3 id="intTitle">Container interior</h3>
-          <div class="int-info" id="intInfo"></div>
+          <h3 id="intTitle">Container</h3>
+          <div class="kv"><span>Owner</span><b id="intOwner">—</b></div>
+          <div class="kv"><span>Token ID</span><b id="intToken">—</b></div>
+          <div class="kv"><span>Coords</span><b id="intCoords">—</b></div>
+
           <div class="int-actions">
             <button id="btnClearSector" class="danger">Clear sector</button>
             <button id="btnClearAll">Clear all</button>
             <button id="btnCloseInterior" class="primary">Готово</button>
           </div>
+
+          <div class="small">Клік по вже розміщеному предмету — прибирає його.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Міні-пікер сектору -->
+  <!-- Mini-picker (sector) -->
   <div class="modal" id="sectorPicker" aria-hidden="true">
     <div class="modal__dialog small">
       <button class="modal__close" data-close>×</button>
-      <h3 class="modal__title" id="sectorPickerTitle">Вибір</h3>
+      <h3 class="modal__title" id="sectorTitle">Вибір</h3>
       <div class="picker-grid" id="sectorGrid"></div>
     </div>
   </div>
 
-  <!-- ПРАВИЛЬНЕ підключення скрипта -->
-<script src="./script.js?v=5" defer></script>
+  <script src="./script.js?v=6" defer></script>
 </body>
-
 </html>
